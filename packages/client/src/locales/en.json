@@ -32,6 +32,7 @@
     },
     "datetime": {
         "title": "Date/time",
+        "animate": "Animate",
         "min": "Minimum",
         "max": "Maximum",
         "submit": "Search with this date-time",

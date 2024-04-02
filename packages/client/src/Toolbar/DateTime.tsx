@@ -9,25 +9,29 @@ import { RootState } from '../redux/store';
 
 import './DateTime.css';
 
+const TIME_WINDOW_MS = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
     const { dictionary } = useSelector((state: RootState) => state.map);
-    const { from_date, to_date } = useSelector((state: RootState) => state.map);
+    const { from_date } = useSelector((state: RootState) => state.map);
 
-    const initialDate = dictionary?.datetime?.min && dictionary?.datetime?.max
-        ? (dictionary.datetime.min + dictionary.datetime.max) / 2
-        : ((from_date + to_date) || 0) / 2;
+    const initialDate = dictionary?.datetime?.min
+        ? dictionary.datetime.min
+        : from_date;
 
     const [localDate, setLocalDate] = useState(initialDate);
     const [localMin, setLocalMin] = useState(dictionary?.datetime?.min);
     const [localMax, setLocalMax] = useState(dictionary?.datetime?.max);
+    const [isAnimating, setIsAnimating] = useState<NodeJS.Timer | undefined>();
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
 
     useEffect(() => {
         if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
-            setLocalDate((dictionary.datetime.min + dictionary.datetime.max) / 2);
+            setLocalDate(dictionary.datetime.min);
             setLocalMin(dictionary.datetime.min);
             setLocalMax(dictionary.datetime.max);
+            console.log('set min/max', dictionary.datetime.min, dictionary.datetime.max)
             setGotTheFirstDictionary(true);
         }
     }, [dictionary, gotTheFirstDictionary]);
@@ -35,10 +39,8 @@ const DateTime: React.FC = () => {
     const debouncedHandleSubmit = debounce(handleSubmit, 500);
 
     function handleSubmit() {
-        const halfDayMilliseconds = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-
-        const fromDate = new Date(localDate - halfDayMilliseconds).getTime();
-        const toDate = new Date(localDate + halfDayMilliseconds).getTime();
+        const fromDate = new Date(Number(localDate) - TIME_WINDOW_MS).getTime();
+        const toDate = new Date(Number(localDate) + TIME_WINDOW_MS).getTime();
 
         console.log(`handle timestamp submit of ${localDate} bewtween`, localMin, localMax);
 
@@ -51,6 +53,31 @@ const DateTime: React.FC = () => {
         const value: number = parseInt(e.target.value);
         setLocalDate(value);
         debouncedHandleSubmit();
+    }
+
+    function animate() {
+        if (!localMax || !localMin) {
+            console.warn('animate called too early');
+            return;
+        }
+        let newLocalDate = localDate + TIME_WINDOW_MS;
+        if (newLocalDate > localMax) {
+            newLocalDate = localMin;
+        }
+        console.info('animate setting new local date', newLocalDate, 'min/max:', localMin, localMax);
+        setLocalDate(newLocalDate);
+    }
+
+    function handleAnimate() {
+        if (isAnimating) {
+            console.info('Stop animation');
+            clearInterval(isAnimating);
+            setIsAnimating(undefined);
+        } else {
+            console.info('Start animation');
+            const intervalId = setInterval(animate, 1000);
+            setIsAnimating(intervalId);
+        }
     }
 
     return (
@@ -66,7 +93,7 @@ const DateTime: React.FC = () => {
                 value={localDate}
                 onChange={handleDateChange}
             />
-            <span className='submit' onClick={handleSubmit} title={get('datetime.submit')} aria-label={get('datetime.submit')}>▶</span>
+            <span className={'submit ' + (isAnimating ? 'stop' : 'start')} onClick={handleAnimate} title={get('datetime.animate')} aria-label={get('datetime.animate')}></span>
         </nav>
     );
 }

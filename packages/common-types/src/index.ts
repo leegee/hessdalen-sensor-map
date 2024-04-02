@@ -26,8 +26,8 @@ export interface QueryParams {
 }
 
 export interface DateTimeMinMax {
-  min: number | undefined;
-  max: number | undefined;
+  min: number;
+  max: number;
 }
 
 export interface MapDictionary {

@@ -21,4 +21,14 @@
         margin: 0;
         cursor: pointer;
     }
+
+    .submit.start::after {
+        content: '▶';
+    }
+
+    .submit.stop::after {
+        content: '■';
+        color: var(--ufo-brand-clr);
+    }
+
 }

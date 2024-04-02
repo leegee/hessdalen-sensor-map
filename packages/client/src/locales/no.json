@@ -32,6 +32,7 @@
     },
     "datetime": {
         "title": "Dato-klokkeslett",
+        "animate": "Animere",
         "min": "Minimum",
         "max": "Maksimum",
         "submit": "Søk med denne dato-klokkeslett",
