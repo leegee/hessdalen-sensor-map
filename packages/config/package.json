@@ -1,0 +1,11 @@
+{
+    "name": "@hessdalen-sensor-map/config",
+    "version": "1.0.0",
+    "description": "Configuration read from .env, with defaults for localhost",
+    "main": "./build/index.js",
+    "types": "./build/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "build": "tsc --build"
+    }
+}

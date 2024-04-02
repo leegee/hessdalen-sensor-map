@@ -1,0 +1,83 @@
+#modal {
+    background: var(--ufo-modal-bg);
+    color: var(--ufo-modal-fg);
+    position: absolute;
+    top: 0;
+    left: 0;
+    left: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 10, 10, .6);
+    z-index: 100;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+
+    ::-webkit-scrollbar {
+        background: var(--ufo-modal-bg);
+    }
+
+    ::-webkit-scrollbar-track {
+        background: var(--ufo-modal-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--ufo-modal-border-clr);
+    }
+
+    #modal-content {
+        position: relative;
+        background: var(--ufo-modal-bg);
+        color: var(--ufo-modal-fg);
+        width: clamp(20rem, 50em, 80vw);
+        height: clamp(30rem, 50em, 80vh);
+        border: 1pt solid var(--ufo-modal-border-clr);
+        border-radius: 4pt;
+        padding: 1em;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        h2 {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1em;
+        }
+    }
+
+
+    #modal-inner {
+        flex-grow: 1;
+        height: 10rem;
+        overflow: auto;
+    }
+
+    #modal-close:after {
+        content: 'X';
+        border: 1pt solid var(--ufo-ctrl-fg);
+        border-radius: 50%;
+        min-width: 1em;
+        max-width: 1em;
+        min-height: 1em;
+        max-height: 1em;
+        font-size: 14pt;
+        display: block;
+        line-height: 1em;
+        display: flex;
+        justify-content: center;
+        padding: 10%;
+        cursor: pointer;
+    }
+
+    #modal-close:hover:after {
+        color: var(--ufo-brand-clr);
+        border-color: var(--ufo-brand-clr)
+    }
+
+}

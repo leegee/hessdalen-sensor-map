@@ -1,0 +1,20 @@
+{
+    "name": "@hessdalen-sensor-map/api",
+    "version": "1.0.0",
+    "description": "Tiny KOA API, nothing nice yet",
+    "main": "./build/index.js",
+    "type": "module",
+    "scripts": {
+        "build": "tsc --build",
+        "dev": "npx tsx src/server.ts",
+        "watch": "npx nodemon --exec tsx src/server.ts",
+        "start": "node ./build/index.js"
+    },
+    "dependencies": {
+        "@hessdalen-sensor-map/common-types": "file:../common-types",
+        "@hessdalen-sensor-map/config": "file:../config"
+    },
+    "engines": {
+        "node": "20.x"
+    }
+}

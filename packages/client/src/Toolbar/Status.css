@@ -1,0 +1,60 @@
+/* ReportCount.css */
+
+.report-ctrl {
+    line-height: 175% !important;
+    padding: 0 !important;
+    margin: 0 auto 0 0 !important;
+    width: calc(var(--ufo-panel-narrow-width) - 8pt);
+    display: flex;
+    align-items: center;
+    padding: 0;
+    margin: 0 0.5em;
+    width: 100%;
+}
+
+.report-ctrl .inner {
+    margin-left: 0.3em;
+}
+
+.collapse-btn,
+.full-width-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 1em;
+    transition: all 0.3s ease;
+    opacity: 50%;
+    font-size: 1rem;
+}
+
+.panel .collapse-btn::after {
+    content: '▲';
+}
+
+.panel.collapsed .collapse-btn::after {
+    content: '▼';
+}
+
+.SMALL-SCREEN {
+    .panel .collapse-btn::after {
+        content: '▼';
+    }
+
+    .panel.collapsed .collapse-btn::after {
+        content: '▲';
+    }
+}
+
+.panel .full-width-btn::after {
+    content: '▶';
+}
+
+.panel.full-width .full-width-btn::after {
+    content: '◀';
+}
+
+
+main {
+    flex: 1;
+    overflow: auto;
+}

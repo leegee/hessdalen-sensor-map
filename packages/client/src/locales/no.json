@@ -1,0 +1,45 @@
+{
+    "open": "Åpne",
+    "close": "Lukke",
+    "panel": {
+        "points_count": "{count} observasjoner",
+        "cluster_count": "{count} grupper av observasjoner",
+        "only_clusters_not_points": "Vennligst zoom inn for detaljer om observasjoner.",
+        "no_results": "Det var ingen treff for søket ditt på gjeldende kart. Prøv kanskje å panorere og zoome ut."
+    },
+    "status": {
+        "points_count": "{count} observasjoner",
+        "cluster_count": "{count} grupper av observasjoner",
+        "no_results": "Prøv å zoome ut/endre søket."
+    },
+    "sighting_details": {
+        "title": "Rapport"
+    },
+    "feature_table": {
+        "date": "Dato",
+        "no_data": "Ingen data for det synlige området",
+        "mag_x": "X",
+        "mag_y": "Y",
+        "mag_z": "Z",
+        "rc_temperature": "°C"
+    },
+    "search_text": {
+        "title": "Søk etter {minChars} tegn eller malm",
+        "placeholder": "Søk her"
+    },
+    "histogram": {
+        "title": "Observasjoner etter år"
+    },
+    "date_range": {
+        "title": "Datoperiode",
+        "histogram-button": "Se datodiagram",
+        "histogram": "Datodiagram",
+        "min": "Minimum",
+        "max": "Maksimum",
+        "submit": "Søk med disse datoene",
+        "error": {
+            "min_range": "Minimum år må være mindre enn eller lik maksimum år",
+            "max_range": "Maksimum år må være større enn eller lik minimum år"
+        }
+    }
+}

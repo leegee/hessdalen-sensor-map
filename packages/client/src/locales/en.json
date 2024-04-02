@@ -1,0 +1,45 @@
+{
+    "open": "Open",
+    "close": "Close",
+    "status": {
+        "points_count": "{count} sightings",
+        "cluster_count": "{count} clusters of sightings",
+        "only_clusters_not_points": "Please zoom to for details of sightings.",
+        "no_results": "There were no matches for your search on the current map. Perhaps try panning and zooming out."
+    },
+    "panel": {
+        "points_count": "{count} sightings",
+        "cluster_count": "{count} clusters of sightings",
+        "no_results": "No results: try zooming out or changing your terms"
+    },
+    "sighting_details": {
+        "title": "Report"
+    },
+    "feature_table": {
+        "date": "Date",
+        "no_data": "No data",
+        "mag_x": "X",
+        "mag_y": "Y",
+        "mag_z": "Z",
+        "rc_temperature": "°C"
+    },
+    "search_text": {
+        "title": "Search for {minChars} characters or more",
+        "placeholder": "Search here"
+    },
+    "histogram": {
+        "title": "Sightings by year"
+    },
+    "date_range": {
+        "title": "Date range",
+        "histogram-button": "View date histogram",
+        "histogram": "Date histogram",
+        "min": "Minimum",
+        "max": "Maximum",
+        "submit": "Search with these dates",
+        "error": {
+            "min_range": "Minimum year must be less than or equal to maximum year",
+            "max_range": "Maximum year must be greater than or equal to minimum year"
+        }
+    }
+}

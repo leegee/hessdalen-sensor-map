@@ -1,0 +1,5 @@
+/* theme ctrl */
+
+#theme-ctrl::after {
+    content: '🗺️';
+}

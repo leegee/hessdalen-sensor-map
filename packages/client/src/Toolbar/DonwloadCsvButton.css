@@ -1,0 +1,3 @@
+.download-csv-button::after {
+    content: '💾';
+}
