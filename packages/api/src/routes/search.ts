@@ -215,8 +215,8 @@ async function getDictionary(featureCollection: FeatureCollection | undefined) {
     }
 
     dictionary.datetime = {
-        min: typeof min !== 'undefined' ? new Date(min).getFullYear() : undefined,
-        max: typeof max !== 'undefined' ? new Date(max).getFullYear() : undefined,
+        min: typeof min !== 'undefined' ? min.getTime() : undefined,
+        max: typeof max !== 'undefined' ? max.getTime() : undefined,
     };
 
     return dictionary;

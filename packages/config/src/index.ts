@@ -33,6 +33,7 @@ export type ConfigType = {
     map: {
       centre: [number, number];
       cluster_eps_metres: number;
+      initZoom: number;
     };
   };
   zoomLevelForPoints: number;
@@ -66,8 +67,9 @@ const config: ConfigType = {
       debounceMs: 1000,
     },
     map: {
-      centre: [18, 64] as [number, number], // Should use extent
+      centre: [11.4069, 62.8436] as [number, number], 
       cluster_eps_metres: 50000, // The distance between clusters
+      initZoom: 7,
     }
   },
   zoomLevelForPoints: 8,

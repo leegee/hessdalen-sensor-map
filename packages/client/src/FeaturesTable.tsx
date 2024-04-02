@@ -105,10 +105,7 @@ const FeatureTable: React.FC = () => {
                     <div className='th number'>{get('feature_table.mag_y')}</div>
                     <div className='th number'>{get('feature_table.mag_z')}</div>
                     <div className='th number'>{get('feature_table.rc_temperature')}</div>
-                    <div className='th ctrls'>
-                        <span className='close-full-width' onClick={() => dispatch(setPanel('narrow'))} title={get('close')} aria-label={get('close')} />
-                        <span className='open-full-width' onClick={() => dispatch(setPanel('full'))} title={get('open')} aria-label={get('open')} />
-                    </div>
+                    <div className='th ctrls'> </div>
                 </div>
             </div>
 
@@ -132,7 +129,14 @@ const FeatureTable: React.FC = () => {
                             onClick={() => handleClickRow(feature.properties.id)}
                         >
                             <div className='td datetime'>
-                                {new Intl.DateTimeFormat(config.locale).format(new Date(feature.properties.timestamp))}
+                                {new Intl.DateTimeFormat(config.locale, {
+                                    year: undefined,
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                }).format(new Date(feature.properties.timestamp))}
                             </div>
                             <div className='td number'>{feature.properties.mag_x}</div>
                             <div className='td number'>{feature.properties.mag_y}</div>

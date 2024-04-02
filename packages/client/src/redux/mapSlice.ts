@@ -33,7 +33,7 @@ export interface UfoFeatureCollection {
 
 export interface FetchFeaturesResposneType {
   results: UfoFeatureCollection;
-  dictionary: MapDictionaryType | undefined;
+  dictionary?: MapDictionaryType;
 }
 
 // Extend QueryParams 
@@ -42,9 +42,9 @@ export interface MapState {
   zoom: number;
   bounds: [number, number, number, number] | null;
   featureCollection: UfoFeatureCollection | null;
-  dictionary: MapDictionaryType | undefined;
-  from_date?: number;
-  to_date?: number;
+  dictionary?: MapDictionaryType;
+  from_date: number;
+  to_date: number;
   q?: string;
   basemapSource: string;
   previousQueryString: string;
@@ -56,12 +56,12 @@ const searchEndpoint = config.api.host + ':' + config.api.port + config.api.endo
 
 const initialState: MapState = {
   featureCollection: null,
-  zoom: 5,
+  zoom: Number(config.gui.map.initZoom),
   center: config.gui.map.centre,
   bounds: null,
   dictionary: undefined,
-  from_date: undefined,
-  to_date: undefined,
+  from_date: 0,
+  to_date: 0,
   q: '',
   basemapSource: localStorage.getItem('basemap_source') ?? 'geo',
   previousQueryString: '',
@@ -80,18 +80,18 @@ const mapSlice = createSlice({
     },
     setFeatureCollection(state, action: PayloadAction<FetchFeaturesResposneType>) {
       state.featureCollection = (action.payload.results ) ;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       state.dictionary = action.payload.dictionary;
     },
     resetDates(state) {
-      state.from_date = undefined;
-      state.to_date = undefined;
-      console.log('reset dates')
+      state.from_date = 0;
+      state.to_date = 0;
     },
-    setFromDate(state, action: PayloadAction<number | undefined>) {
-      state.from_date = action.payload;
+    setFromDate(state, action: PayloadAction<number>) {
+      state.from_date = action.payload || 0;
     },
-    setToDate(state, action: PayloadAction<number | undefined>) {
-      state.to_date = action.payload;
+    setToDate(state, action: PayloadAction<number>) {
+      state.to_date = action.payload || 0;
     },
     setQ(state, action: PayloadAction<string | undefined>) {
       state.q = action.payload ? action.payload.trim() : '';
@@ -101,6 +101,7 @@ const mapSlice = createSlice({
       localStorage.setItem('basemap_source', state.basemapSource);
     },
     setSource: (state, action: PayloadAction<FeatureSourceAttributeType>) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       state.source = action.payload;
     },
     setPreviousQueryString: (state, action: PayloadAction<string>) => {
@@ -153,8 +154,8 @@ export const selectQueryString = (mapState: MapState): string | undefined => {
     maxlng: String(bounds[2]),
     maxlat: String(bounds[3]),
     source: String(source),
-    ...(from_date !== undefined ? { from_date: String(from_date) } : {}),
-    ...(to_date !== undefined ? { to_date: String(to_date) } : {}),
+    ...(from_date !== 0 ? { from_date: String(from_date) } : {}),
+    ...(to_date !== 0 ? { to_date: String(to_date) } : {}),
     ...(q !== '' ? { q: q } : {}),
   };
 

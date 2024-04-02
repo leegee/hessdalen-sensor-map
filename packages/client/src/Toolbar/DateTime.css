@@ -1,25 +1,17 @@
-/* DateRange.module.css */
+/* DateTime.css */
 
-.date-range {
+#datetime-selector {
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    width: 100%;
 }
 
-.date-range {
+#datetime-selector {
     input {
-        width: 4em;
+        width: 100%;
         text-align: center;
         font-family: 'Courier New', Courier, monospace;
-    }
-
-    .calendar-icon {
-        display: inline-block;
-        padding-right: 0.5em;
-    }
-
-    .calendar-icon::after {
-        content: '📅';
     }
 
     .submit {

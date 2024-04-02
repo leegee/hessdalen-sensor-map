@@ -30,16 +30,14 @@
     "histogram": {
         "title": "Observasjoner etter år"
     },
-    "date_range": {
-        "title": "Datoperiode",
-        "histogram-button": "Se datodiagram",
-        "histogram": "Datodiagram",
+    "datetime": {
+        "title": "Dato-klokkeslett",
         "min": "Minimum",
         "max": "Maksimum",
-        "submit": "Søk med disse datoene",
+        "submit": "Søk med denne dato-klokkeslett",
         "error": {
-            "min_range": "Minimum år må være mindre enn eller lik maksimum år",
-            "max_range": "Maksimum år må være større enn eller lik minimum år"
+            "min_range": "Minimum må være mindre enn eller lik maksimum",
+            "max_range": "Maksimum må være større enn eller lik minimum"
         }
     }
 }

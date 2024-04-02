@@ -4,12 +4,10 @@
     line-height: 175% !important;
     padding: 0 !important;
     margin: 0 auto 0 0 !important;
-    width: calc(var(--ufo-panel-narrow-width) - 8pt);
+    width: calc(var(--ufo-panel-narrow-width) - 0.6em);
     display: flex;
     align-items: center;
-    padding: 0;
-    margin: 0 0.5em;
-    width: 100%;
+    padding: 0 0.3em !important;
 }
 
 .report-ctrl .inner {
@@ -51,10 +49,4 @@
 
 .panel.full-width .full-width-btn::after {
     content: '◀';
-}
-
-
-main {
-    flex: 1;
-    overflow: auto;
 }

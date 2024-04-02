@@ -30,16 +30,14 @@
     "histogram": {
         "title": "Sightings by year"
     },
-    "date_range": {
-        "title": "Date range",
-        "histogram-button": "View date histogram",
-        "histogram": "Date histogram",
+    "datetime": {
+        "title": "Date/time",
         "min": "Minimum",
         "max": "Maximum",
-        "submit": "Search with these dates",
+        "submit": "Search with this date-time",
         "error": {
-            "min_range": "Minimum year must be less than or equal to maximum year",
-            "max_range": "Maximum year must be greater than or equal to minimum year"
+            "min_range": "Minimum must be less than or equal to maximum",
+            "max_range": "Maximum must be greater than or equal to minimum"
         }
     }
 }

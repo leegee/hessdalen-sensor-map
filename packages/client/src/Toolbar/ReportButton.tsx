@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { get } from 'react-intl-universal';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
@@ -10,11 +10,15 @@ const ReportButton: React.FC = () => {
     const dispatch = useDispatch();
     const { panel } = useSelector((state: RootState) => state.gui);
 
+    useEffect(() => {
+        console.log("Panel state:", panel);
+    }, [panel]);
+
     const togglePanel = () => {
-        if (panel === 'narrow') {
-            dispatch(setPanel('full'));
-        } else {
+        if (panel === 'full') {
             dispatch(setPanel('narrow'));
+        } else {
+            dispatch(setPanel('full'));
         }
     };
 

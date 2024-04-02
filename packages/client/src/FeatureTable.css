@@ -62,9 +62,10 @@
     .td.datetime {
         white-space: nowrap;
         text-overflow: unset;
-        min-width: 6em;
-        width: 6em;
-        max-width: 6em;
+        min-width: 12em;
+        width: 12em;
+        max-width: 12em;
+        font-family: 'Lucida Console', 'Courier New', Courier, monospace;
     }
 
     .th.number,
@@ -151,11 +152,6 @@
     .close-full-width {
         display: none;
     }
-
-    /* No our-datetime in narrow width only in full-width */
-    .our-datetime {
-        display: none;
-    }
 }
 
 /* Show the report text in full-width */
@@ -183,9 +179,9 @@
 
     .th.datetime,
     .td.datetime {
-        min-width: 7em;
-        width: 7em;
-        max-width: 7em;
+        min-width: 12em;
+        width: 12em;
+        max-width: 12em;
     }
 
     .th.number,
@@ -194,10 +190,6 @@
         max-width: 8em;
         width: 20%;
         text-transform: capitalize;
-    }
-
-    #feature-table .our-datetime {
-        display: block;
     }
 
     .td.ctrls {
