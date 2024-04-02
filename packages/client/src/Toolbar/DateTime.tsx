@@ -17,20 +17,20 @@ const DateTime: React.FC = () => {
     const { from_date } = useSelector((state: RootState) => state.map);
 
     const initialDate = dictionary?.datetime?.min
-        ? dictionary.datetime.min
+        ? Number(dictionary.datetime.min)
         : from_date;
 
-    const [localDate, setLocalDate] = useState(initialDate);
-    const [localMin, setLocalMin] = useState(dictionary?.datetime?.min);
-    const [localMax, setLocalMax] = useState(dictionary?.datetime?.max);
+    const [localDate, setLocalDate] = useState<number>(initialDate);
+    const [localMin, setLocalMin] = useState<number>(0);
+    const [localMax, setLocalMax] = useState<number>(0);
     const [isAnimating, setIsAnimating] = useState<NodeJS.Timer | undefined>();
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
 
     useEffect(() => {
         if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
-            setLocalDate(dictionary.datetime.min);
-            setLocalMin(dictionary.datetime.min);
-            setLocalMax(dictionary.datetime.max);
+            setLocalDate(Number(dictionary.datetime.min));
+            setLocalMin(Number(dictionary.datetime.min));
+            setLocalMax(Number(dictionary.datetime.max));
             console.log('set min/max', dictionary.datetime.min, dictionary.datetime.max)
             setGotTheFirstDictionary(true);
         }
