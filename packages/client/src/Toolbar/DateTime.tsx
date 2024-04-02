@@ -10,6 +10,7 @@ import { RootState } from '../redux/store';
 import './DateTime.css';
 
 const TIME_WINDOW_MS = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+const ANIMATION_SPEED = 1000 * 4;
 
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
@@ -31,7 +32,6 @@ const DateTime: React.FC = () => {
             setLocalDate(Number(dictionary.datetime.min));
             setLocalMin(Number(dictionary.datetime.min));
             setLocalMax(Number(dictionary.datetime.max));
-            console.log('set min/max', dictionary.datetime.min, dictionary.datetime.max)
             setGotTheFirstDictionary(true);
         }
     }, [dictionary, gotTheFirstDictionary]);
@@ -42,14 +42,14 @@ const DateTime: React.FC = () => {
         const fromDate = new Date(Number(localDate) - TIME_WINDOW_MS).getTime();
         const toDate = new Date(Number(localDate) + TIME_WINDOW_MS).getTime();
 
-        console.log(`handle timestamp submit of ${localDate} bewtween`, localMin, localMax);
+        console.log({ action: 'submit', localDate, localMin, localMax });
 
         dispatch(setFromDate(fromDate));
         dispatch(setToDate(toDate));
         dispatch(fetchFeatures());
     }
 
-    function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
+    function handleSliderChange(e: React.ChangeEvent<HTMLInputElement>) {
         const value: number = parseInt(e.target.value);
         setLocalDate(value);
         debouncedHandleSubmit();
@@ -64,8 +64,8 @@ const DateTime: React.FC = () => {
         if (newLocalDate > localMax) {
             newLocalDate = localMin;
         }
-        console.info('animate setting new local date', newLocalDate, 'min/max:', localMin, localMax);
         setLocalDate(newLocalDate);
+        handleSubmit();
     }
 
     function handleAnimate() {
@@ -75,7 +75,7 @@ const DateTime: React.FC = () => {
             setIsAnimating(undefined);
         } else {
             console.info('Start animation');
-            const intervalId = setInterval(animate, 1000);
+            const intervalId = setInterval(animate, ANIMATION_SPEED);
             setIsAnimating(intervalId);
         }
     }
@@ -91,7 +91,7 @@ const DateTime: React.FC = () => {
                 min={localMin}
                 max={localMax}
                 value={localDate}
-                onChange={handleDateChange}
+                onChange={handleSliderChange}
             />
             <span className={'submit ' + (isAnimating ? 'stop' : 'start')} onClick={handleAnimate} title={get('datetime.animate')} aria-label={get('datetime.animate')}></span>
         </nav>
