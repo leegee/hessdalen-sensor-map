@@ -251,20 +251,11 @@ function getCleanArgs(args: ParsedUrlQuery) {
         )
     };
 
-    if (args.source)
-
-        if (userArgs.from_date && Number(userArgs.from_date) === 1) {
-            delete userArgs.from_date;
-        }
-    if (userArgs.to_date && Number(userArgs.to_date) === 1) {
-        delete userArgs.to_date;
-    }
-
     if (userArgs.from_date) {
-        userArgs.from_date = new Date(userArgs.from_date + " 01-01 00:00:00").toISOString();
+        userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
     }
     if (userArgs.to_date) {
-        userArgs.to_date = new Date(userArgs.to_date + " 12-31 23:59:59").toISOString();
+        userArgs.to_date = new Date(Number(userArgs.to_date)).toISOString();
     }
 
     if (!userArgs.sort_order) {

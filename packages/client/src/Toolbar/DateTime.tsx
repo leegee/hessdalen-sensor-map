@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { get } from 'react-intl-universal';
+import debounce from 'debounce';
 
 import { fetchFeatures, setFromDate, setToDate } from '../redux/mapSlice';
 import { RootState } from '../redux/store';
 
 import './DateTime.css';
-import { get } from 'react-intl-universal';
 
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
@@ -18,22 +19,38 @@ const DateTime: React.FC = () => {
         : ((from_date + to_date) || 0) / 2;
 
     const [localDate, setLocalDate] = useState(initialDate);
+    const [localMin, setLocalMin] = useState(dictionary?.datetime?.min);
+    const [localMax, setLocalMax] = useState(dictionary?.datetime?.max);
+    const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
 
     useEffect(() => {
-        if (dictionary?.datetime?.min && dictionary.datetime.max) {
+        if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
             setLocalDate((dictionary.datetime.min + dictionary.datetime.max) / 2);
+            setLocalMin(dictionary.datetime.min);
+            setLocalMax(dictionary.datetime.max);
+            setGotTheFirstDictionary(true);
         }
-    }, [dictionary]);
+    }, [dictionary, gotTheFirstDictionary]);
+
+    const debouncedHandleSubmit = debounce(handleSubmit, 500);
 
     function handleSubmit() {
-        dispatch(setFromDate(localDate));
-        dispatch(setToDate(localDate));
+        const halfDayMilliseconds = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+
+        const fromDate = new Date(localDate - halfDayMilliseconds).getTime();
+        const toDate = new Date(localDate + halfDayMilliseconds).getTime();
+
+        console.log(`handle timestamp submit of ${localDate} bewtween`, localMin, localMax);
+
+        dispatch(setFromDate(fromDate));
+        dispatch(setToDate(toDate));
         dispatch(fetchFeatures());
     }
 
     function handleDateChange(e: React.ChangeEvent<HTMLInputElement>) {
         const value: number = parseInt(e.target.value);
         setLocalDate(value);
+        debouncedHandleSubmit();
     }
 
     return (
@@ -44,8 +61,8 @@ const DateTime: React.FC = () => {
                 type='range'
                 id='datetime'
                 name='datetime'
-                min={dictionary?.datetime?.min}
-                max={dictionary?.datetime?.max}
+                min={localMin}
+                max={localMax}
                 value={localDate}
                 onChange={handleDateChange}
             />
