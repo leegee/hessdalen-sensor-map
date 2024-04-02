@@ -24,7 +24,7 @@ const FeatureTable: React.FC = () => {
     const featureCollection = useSelector((state: RootState) => state.map.featureCollection);
     const { selectionId } = useSelector((state: RootState) => state.gui);
     const [localFeatures, setLocalFeatures] = useState<any[]>([]);
-    const selectedRowRef = useRef<HTMLDivElement>(null);
+    const selectedRowRef = useRef<HTMLTableRowElement>(null);
 
     function handleClickRow(id: number) {
         dispatch(setSelectionId(Number(id)));
@@ -97,19 +97,19 @@ const FeatureTable: React.FC = () => {
     }
 
     return (
-        <div id='feature-table'>
-            <div className='thead'>
-                <div className='tr'>
-                    <div className='th datetime'>{get('feature_table.date')}</div>
-                    <div className='th number'>{get('feature_table.mag_x')}</div>
-                    <div className='th number'>{get('feature_table.mag_y')}</div>
-                    <div className='th number'>{get('feature_table.mag_z')}</div>
-                    <div className='th number'>{get('feature_table.rc_temperature')}</div>
-                    <div className='th ctrls'> </div>
-                </div>
-            </div>
+        <table id='feature-table'>
+            <thead className='thead'>
+                <tr className='tr'>
+                    <th className='th datetime'>{get('feature_table.date')}</th>
+                    <th className='th number'>{get('feature_table.mag_x')}</th>
+                    <th className='th number'>{get('feature_table.mag_y')}</th>
+                    <th className='th number'>{get('feature_table.mag_z')}</th>
+                    <th className='th number'>{get('feature_table.rc_temperature')}</th>
+                    <th className='th ctrls'> </th>
+                </tr>
+            </thead>
 
-            <div className='tbody'>
+            <tbody className='tbody'>
                 {localFeatures
                     .slice() // Create a copy of the array to avoid mutating the original array
                     .sort((a, b) => {
@@ -123,12 +123,12 @@ const FeatureTable: React.FC = () => {
                     })
                     .map((feature: any, index: number) => (
 
-                        <div className={getRowClass(feature.properties.id)}
+                        <tr className={getRowClass(feature.properties.id)}
                             ref={feature.properties.id === selectionId ? selectedRowRef : null}
                             key={index} id={getRowId(feature.properties.id)}
                             onClick={() => handleClickRow(feature.properties.id)}
                         >
-                            <div className='td datetime'>
+                            <td className='td datetime'>
                                 {new Intl.DateTimeFormat(config.locale, {
                                     year: undefined,
                                     month: '2-digit',
@@ -137,19 +137,19 @@ const FeatureTable: React.FC = () => {
                                     minute: '2-digit',
                                     second: '2-digit'
                                 }).format(new Date(feature.properties.timestamp))}
-                            </div>
-                            <div className='td number'>{feature.properties.mag_x}</div>
-                            <div className='td number'>{feature.properties.mag_y}</div>
-                            <div className='td number'>{feature.properties.mag_z}</div>
-                            <div className='td number'>{feature.properties.rc_temperature}</div>
-                            <div className='td ctrls'>
+                            </td>
+                            <td className='td number'>{feature.properties.mag_x}</td>
+                            <td className='td number'>{feature.properties.mag_y}</td>
+                            <td className='td number'>{feature.properties.mag_z}</td>
+                            <td className='td number'>{feature.properties.rc_temperature}</td>
+                            <td className='td ctrls'>
                                 <span className='ctrl row-goto-map' onClick={() => showPointOnMap(feature)} />
                                 <Link className='ctrl row-goto-details' to={'/sighting/' + feature.properties.id} />
-                            </div>
-                        </div>
+                            </td>
+                        </tr>
                     ))}
-            </div>
-        </div>
+            </tbody>
+        </table>
     );
 };
 
