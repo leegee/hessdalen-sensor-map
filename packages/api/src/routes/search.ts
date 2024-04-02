@@ -182,13 +182,13 @@ function constructSqlBits(userArgs: QueryParams): SqlBitsType {
 async function getDictionary(featureCollection: FeatureCollection | undefined) {
     const dictionary: MapDictionary = {
         datetime: {
-            min: undefined,
-            max: undefined,
+            min: Infinity,
+            max: 0,
         },
     };
 
-    let min: Date | undefined = undefined;
-    let max: Date | undefined = undefined;
+    let min = Infinity;
+    let max = 0;
 
     if (!featureCollection || !featureCollection.features) {
         console.warn({ action: 'getDictionary', warning: 'no features', featureCollection });
@@ -196,28 +196,21 @@ async function getDictionary(featureCollection: FeatureCollection | undefined) {
     }
 
     for (const feature of featureCollection.features) {
-        let thisDatetime: Date | undefined;
+        let thisDatetime: number;
 
-        try {
-            thisDatetime = new Date(feature.properties?.timestamp);
-        } catch (e) {
-            thisDatetime = undefined;
-        }
+        thisDatetime = new Date(feature.properties?.timestamp).getTime();
 
         if (typeof thisDatetime !== 'undefined') {
-            if (typeof min === 'undefined' || thisDatetime.getTime() < min.getTime()) {
+            if (typeof min === 'undefined' || thisDatetime < min) {
                 min = thisDatetime;
             }
-            if (typeof max === 'undefined' || thisDatetime.getTime() > max.getTime()) {
+            if (typeof max === 'undefined' || thisDatetime > max) {
                 max = thisDatetime;
             }
         }
     }
 
-    dictionary.datetime = {
-        min: typeof min !== 'undefined' ? min.getTime() : undefined,
-        max: typeof max !== 'undefined' ? max.getTime() : undefined,
-    };
+    dictionary.datetime = { min, max };
 
     return dictionary;
 }
@@ -292,199 +285,3 @@ function geoJsonForPoints(sqlBits: SqlBitsType) {
             ) AS s
         ) AS fc`;
 }
-
-
-function geoJsonForClusters(sqlBits: SqlBitsType, userArgs: QueryParams) {
-    // For cluster boudnaries
-    // const eps = epsFromZoom(userArgs.zoom);
-
-    // For heatmaps
-    const eps = 1000 * 10;
-
-    return config.db.engine === 'postgis' ?
-        `SELECT jsonb_build_object(
-            'type', 'FeatureCollection',
-            'features', jsonb_agg(feature),
-            'pointsCount', 0,
-            'clusterCount', COUNT(*)
-        )
-        FROM (
-            SELECT jsonb_build_object(
-                'type', 'Feature',
-                'geometry', ST_AsGeoJSON(s.cluster_geom, 3857)::jsonb,
-                'properties', jsonb_build_object(
-                    'cluster_id', s.cluster_id,
-                    'num_points', s.num_points
-                )
-            ) AS feature
-            FROM (
-                SELECT 
-                    cluster_id,
-                    ST_ConvexHull(ST_Collect(point)) AS cluster_geom,
-                    COUNT(*) AS num_points
-                FROM (
-                    SELECT 
-                        ST_ClusterDBSCAN(point, eps := ${eps}, minpoints := 1) OVER() AS cluster_id,
-                        point
-                    FROM sightings
-                    WHERE ${sqlBits.whereColumns.join(' AND ')}
-                ) AS clustered_points
-                GROUP BY cluster_id
-            ) AS s
-        ) AS fc;
-        `
-        :
-        `SELECT JSON_OBJECT(
-        'type', 'FeatureCollection',
-        'features', JSON_ARRAYAGG(feature),
-        'pointsCount', 0,
-        'clusterCount', COUNT(*)
-    )
-    FROM(
-        SELECT JSON_OBJECT(
-            'type', 'Feature',
-            'geometry', ST_AsGeoJSON(s.cluster_geom):: json,
-            'properties', JSON_OBJECT(
-                'cluster_id', s.cluster_id,
-                'num_points', s.num_points
-            )
-        ) AS feature
-            FROM(
-            SELECT 
-                    cluster_id,
-            ST_Centroid(ST_Collect(point)) AS cluster_geom,
-            COUNT(*) AS num_points
-                FROM(
-                SELECT 
-                        ST_ClusterDBSCAN(point, ${config.gui.map.cluster_eps_metres}, 1) OVER() AS cluster_id,
-                point
-                    FROM sightings
-                    WHERE ${sqlBits.whereColumns.join(' AND ')}
-            ) AS clustered_points
-                GROUP BY cluster_id
-        ) AS s
-    ) AS fc`;
-}
-
-function epsFromZoom(zoomLevel: number): number {
-    const eps = epsMapping[Math.min(Math.max(zoomLevel - 1, 1), config.zoomLevelForPoints)];
-    console.info({ zoomLevel, eps });
-    return eps;
-}
-
-
-
-/* 
-function sqlForMvt(sqlBits: SqlBitsType, userArgs: MvtParams): string {
-    const eps = epsFromZoom(userArgs.z);
-    let sql = '';
-
-    // No clustering when zoomed in
-    if (userArgs.no_clusters || userArgs.z >= config.zoomLevelForPoints) {
-        console.log(`POINTS because z${userArgs.z} >= ${config.zoomLevelForPoints}`);
-        sql = `SELECT ST_AsMVT(q, 'sighting_points', 4096, 'geom')
-            FROM (
-                SELECT
-                    ${sqlBits.selectColumns.join(', ')},
-                    ST_AsMvtGeom(
-                        point,
-                        BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}),
-                        4096,
-                        256,
-                        true
-                    ) AS geom
-                FROM sightings
-                WHERE 
-                ST_Intersects(point, BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}))
-                ${sqlBits.whereColumns.length ? ' AND ' + sqlBits.whereColumns.join(' AND ') : ''}
-                GROUP BY id
-            ) AS q;`;
-        // point && BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z})
-    }
-
-    else {
-        // sql = `SELECT ST_AsMVT(q, 'sightings', 4096, 'geom')
-        // FROM (
-        //   SELECT
-        //     clusters.cluster_id,
-        //     COUNT(*) as num_points,
-        //     ST_AsMVTGeom(
-        //       ST_Centroid(ST_Collect(clusters.point)),
-        //       BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}),
-        //       4096, 256, true
-        //     ) AS geom,
-        //     MAX(sightings.id) as id,
-        //     MAX(sightings.datetime) as datetime,
-        //     MAX(sightings.location_text) as location_text
-        //   FROM (
-        //     SELECT
-        //       ST_ClusterDBSCAN(point, eps := ${eps}, minpoints := 1) OVER() AS cluster_id,
-        //       point,
-        //       ${sqlBits.selectColumns.join(', ')}
-        //     FROM sightings
-        //     WHERE
-        //       ST_Intersects(point, BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}))
-        //       ${sqlBits.whereColumns.length ? ' AND ' + sqlBits.whereColumns.join(' AND ') : ''}
-        //   ) AS clusters
-        //   INNER JOIN sightings ON clusters.point = sightings.point
-        //   GROUP BY clusters.cluster_id
-        // ) AS q`;
-
-        // One convex hull per tile:
-        // sql = `SELECT ST_AsMVT(q, 'sightings', 4096, 'geom')
-        // FROM (
-        //   SELECT
-        //     1 as id,
-        //     COUNT(*) as num_points,
-        //     ST_AsMVTGeom(
-        //       ST_ConvexHull(ST_Collect(sightings.point)),
-        //       BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}),
-        //       4096, 256, true
-        //     ) AS geom
-        //   FROM sightings
-        //   WHERE
-        //     ST_Intersects(point, BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}))
-        //     ${sqlBits.whereColumns.length ? ' AND ' + sqlBits.whereColumns.join(' AND ') : ''}
-        // ) AS q`;
-
-        // Four hulls per tile:
-        sql = `SELECT ST_AsMVT(q, 'sighting_clusters', 4096, 'geom')
-        FROM (
-          SELECT 
-            quadrant,
-            COUNT(*) as num_points,
-            ST_AsMVTGeom(
-              ST_ConvexHull(ST_Collect(point)),
-              BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}),
-              4096, 256, true
-            ) AS geom
-          FROM (
-            SELECT 
-              CASE 
-                WHEN ST_Intersects(point, ST_SetSRID(ST_MakeEnvelope(bbox.xmin, bbox.ymin, bbox.xmin + (bbox.xmax-bbox.xmin)/2, bbox.ymin + (bbox.ymax-bbox.ymin)/2), 3857)) THEN 'quadrant1'
-                WHEN ST_Intersects(point, ST_SetSRID(ST_MakeEnvelope(bbox.xmin + (bbox.xmax-bbox.xmin)/2, bbox.ymin, bbox.xmax, bbox.ymin + (bbox.ymax-bbox.ymin)/2), 3857)) THEN 'quadrant2'
-                WHEN ST_Intersects(point, ST_SetSRID(ST_MakeEnvelope(bbox.xmin, bbox.ymin + (bbox.ymax-bbox.ymin)/2, bbox.xmin + (bbox.xmax-bbox.xmin)/2, bbox.ymax), 3857)) THEN 'quadrant3'
-                ELSE 'quadrant4'
-              END AS quadrant,
-              point
-            FROM sightings,
-                 (SELECT 
-                    ST_XMin(BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z})) as xmin,
-                    ST_YMin(BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z})) as ymin,
-                    ST_XMax(BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z})) as xmax,
-                    ST_YMax(BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z})) as ymax
-                 ) as bbox
-            WHERE 
-              ST_Intersects(point, BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}))
-              ${sqlBits.whereColumns.length ? ' AND ' + sqlBits.whereColumns.join(' AND ') : ''}
-          ) AS s
-          GROUP BY quadrant
-        ) AS q`;
-
-
-    }
-    //                   -- point && BBox(${userArgs.x}, ${userArgs.y}, ${userArgs.z}) AND
-
-    return sql;
-}
-*/
