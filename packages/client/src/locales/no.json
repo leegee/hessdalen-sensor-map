@@ -1,16 +1,14 @@
 {
     "open": "Åpne",
     "close": "Lukke",
+    "from": "fra",
+    "to": "til",
     "panel": {
-        "points_count": "{count} observasjoner",
-        "cluster_count": "{count} grupper av observasjoner",
-        "only_clusters_not_points": "Vennligst zoom inn for detaljer om observasjoner.",
-        "no_results": "Det var ingen treff for søket ditt på gjeldende kart. Prøv kanskje å panorere og zoome ut."
+        "points_count": "{count} punkter",
+        "no_results": "Det er ingen data for denne visningen av kartet. Prøver å panorere eller zoome ut."
     },
     "status": {
-        "points_count": "{count} observasjoner",
-        "cluster_count": "{count} grupper av observasjoner",
-        "no_results": "Prøv å zoome ut/endre søket."
+        "points_count": "{count} punkter"
     },
     "sighting_details": {
         "title": "Rapport"
