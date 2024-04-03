@@ -143,9 +143,10 @@ export const selectClusterCount = createSelector(
 );
 
 export const selectQueryString = (mapState: MapState): string | undefined => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const { zoom, bounds, from_date, to_date, q, source } = mapState;
-  if (!zoom || !bounds) return;
+  const { zoom, bounds, from_date, to_date } = mapState;
+  if (!zoom || !bounds) {
+    return;
+  }
 
   const queryObject = {
     zoom: String(zoom),
@@ -153,10 +154,8 @@ export const selectQueryString = (mapState: MapState): string | undefined => {
     minlat: String(bounds[1]),
     maxlng: String(bounds[2]),
     maxlat: String(bounds[3]),
-    source: String(source),
     ...(from_date !== 0 ? { from_date: String(from_date) } : {}),
     ...(to_date !== 0 ? { to_date: String(to_date) } : {}),
-    ...(q !== '' ? { q: q } : {}),
   };
 
   return new URLSearchParams(queryObject).toString();
@@ -168,14 +167,15 @@ const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { s
   async (_, { dispatch, getState }): Promise<FetchFeaturesResposneType|any> => {
     const mapState = getState().map;
     const queryString: string | undefined = selectQueryString(mapState);
-    const { previousQueryString } = mapState;
+    if (!queryString) {
+      return;
+    }
 
-    if (!queryString) return;
-
-    if (previousQueryString === queryString) {
+    if (mapState.previousQueryString === queryString) {
       console.log('fetchFeatures - bail, this request query same as last request query');
       return undefined;
     }
+
     dispatch(setPreviousQueryString(queryString));
 
     let response;
