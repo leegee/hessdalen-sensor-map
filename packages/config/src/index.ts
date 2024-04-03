@@ -26,6 +26,7 @@ export type ConfigType = {
     debug: boolean;
   };
   gui: {
+    time_window_ms: number;
     debounce: number;
     apiRequests: {
       debounceMs: number;
@@ -70,7 +71,8 @@ const config: ConfigType = {
       centre: [10.2, 62.2] as [number, number], 
       cluster_eps_metres: 50000, // The distance between clusters
       initZoom: 9,
-    }
+    },
+    time_window_ms: 12 * 60 * 60 * 1000, // 12 hours in milliseconds
   },
   zoomLevelForPoints: 8,
   zoomLevelForPointDetails: 11,

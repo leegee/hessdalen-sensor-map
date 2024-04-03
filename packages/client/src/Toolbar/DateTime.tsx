@@ -8,8 +8,8 @@ import { fetchFeatures, setFromDate, setToDate } from '../redux/mapSlice';
 import { RootState } from '../redux/store';
 
 import './DateTime.css';
+import config from '@hessdalen-sensor-map/config/src';
 
-const TIME_WINDOW_MS = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
 const ANIMATION_SPEED = 1000;
 
 const DateTime: React.FC = () => {
@@ -39,8 +39,8 @@ const DateTime: React.FC = () => {
     const handleSubmit = debounce(_handleSubmit, ANIMATION_SPEED - 1);
 
     function _handleSubmit() {
-        const fromDate = localDate - TIME_WINDOW_MS;
-        const toDate = localDate + TIME_WINDOW_MS;
+        const fromDate = localDate - Number(config.gui.time_window_ms);
+        const toDate = localDate + Number(config.gui.time_window_ms);
 
         console.log({ action: 'submit', localDate, fromDate, toDate });
 
@@ -65,10 +65,10 @@ const DateTime: React.FC = () => {
         if (isAnimating) {
             intervalId = setInterval(() => {
                 setLocalDate(prevLocalDate => {
-                    const newLocalDate = prevLocalDate + TIME_WINDOW_MS;
+                    const newLocalDate = prevLocalDate + config.gui.time_window_ms;
                     if (newLocalDate <= localMax) {
                         handleSubmit();
-                        return newLocalDate;
+                        return newLocalDate as number;
                     } else {
                         setIsAnimating(false);
                         return prevLocalDate;

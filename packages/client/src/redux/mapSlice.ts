@@ -60,8 +60,8 @@ const initialState: MapState = {
   center: config.gui.map.centre,
   bounds: null,
   dictionary: undefined,
-  from_date: 0,
-  to_date: 0,
+  from_date: new Date().getTime(),
+  to_date: new Date().getTime(),
   q: '',
   basemapSource: localStorage.getItem('basemap_source') ?? 'geo',
   previousQueryString: '',
@@ -154,8 +154,8 @@ export const selectQueryString = (mapState: MapState): string | undefined => {
     minlat: String(bounds[1]),
     maxlng: String(bounds[2]),
     maxlat: String(bounds[3]),
-    ...(from_date !== 0 ? { from_date: String(from_date) } : {}),
-    ...(to_date !== 0 ? { to_date: String(to_date) } : {}),
+    from_date: String(from_date),
+    to_date: String(to_date)
   };
 
   return new URLSearchParams(queryObject).toString();
