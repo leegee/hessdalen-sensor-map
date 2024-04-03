@@ -68,7 +68,7 @@ const DateTime: React.FC = () => {
                     const newLocalDate = prevLocalDate + config.gui.time_window_ms;
                     if (newLocalDate <= localMax) {
                         handleSubmit();
-                        return newLocalDate as number;
+                        return newLocalDate;
                     } else {
                         setIsAnimating(false);
                         return prevLocalDate;
