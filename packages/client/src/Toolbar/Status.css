@@ -50,3 +50,7 @@
 .panel.full-width .full-width-btn::after {
     content: '◀';
 }
+
+time {
+    margin: 0 0.3em;
+}
