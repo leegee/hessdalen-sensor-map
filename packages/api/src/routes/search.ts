@@ -23,7 +23,7 @@ export async function search(ctx: Context) {
         results: undefined,
     };
 
-    const userArgs: QueryParams | null = getCleanArgs(ctx.request.query);
+    const userArgs: QueryParams | null = await getCleanArgs(ctx);
 
     if (!userArgs) {
         throw new CustomError({
@@ -180,7 +180,8 @@ async function getDictionary(featureCollection: FeatureCollection | undefined) {
     return dictionary;
 }
 
-function getCleanArgs(args: ParsedUrlQuery) {
+async function getCleanArgs(ctx) {
+    const args: ParsedUrlQuery = ctx.request.query;
     const userArgs: QueryParams = {
         zoom: parseInt(args.zoom as string),
         minlng: parseFloat(args.minlng as string),
@@ -209,15 +210,26 @@ function getCleanArgs(args: ParsedUrlQuery) {
         )
     };
 
-    if (userArgs.from_date) {
-        userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
-    }
-    if (userArgs.to_date) {
-        userArgs.to_date = new Date(Number(userArgs.to_date)).toISOString();
-    }
-
     if (!userArgs.sort_order) {
         userArgs.sort_order = 'DESC';
+    }
+
+    if (!userArgs.from_date || !userArgs.to_date) {
+        const { rows } = await ctx.dbh.query("SELECT MIN(timestamp) FROM sensordata");
+        console.log('xxx',rows[0].min);
+        userArgs.from_date = new Date(String(rows[0].min)).toISOString();
+        userArgs.to_date = new Date(String(rows[0].min + config.gui.time_window_ms)).toISOString();
+        console.log('xxx SET', userArgs);
+    }
+
+    else {
+        console.log('xxx got', userArgs);
+        if (userArgs.from_date) {
+            userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
+        }
+        if (userArgs.to_date) {
+            userArgs.to_date = new Date(Number(userArgs.to_date)).toISOString();
+        }
     }
 
     return (
