@@ -41,11 +41,11 @@ const DateTime: React.FC = () => {
     function _handleSubmit() {
         const fromDate = localDate - Number(config.gui.time_window_ms);
         const toDate = localDate + Number(config.gui.time_window_ms);
+        dispatch(setFromDate(fromDate));
+        dispatch(setToDate(toDate));
 
         console.log({ action: 'submit', localDate, fromDate, toDate });
 
-        dispatch(setFromDate(fromDate));
-        dispatch(setToDate(toDate));
         dispatch(fetchFeatures());
     }
 

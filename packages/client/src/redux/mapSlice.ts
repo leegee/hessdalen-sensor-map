@@ -49,6 +49,7 @@ export interface MapState {
   basemapSource: string;
   previousQueryString: string;
   requestingCsv: boolean;
+  requestingFeatures: boolean;
   source: FeatureSourceAttributeType;
 }
 
@@ -66,6 +67,7 @@ const initialState: MapState = {
   basemapSource: localStorage.getItem('basemap_source') ?? 'geo',
   previousQueryString: '',
   requestingCsv: false,
+  requestingFeatures: false,
   source: 'not-specified',
 };
 
@@ -78,9 +80,11 @@ const mapSlice = createSlice({
       state.zoom = action.payload.zoom;
       state.bounds = action.payload.bounds;
     },
+    startFeaturesRequest(state) {
+      state.requestingFeatures = true;
+    },
     setFeatureCollection(state, action: PayloadAction<FetchFeaturesResposneType>) {
       state.featureCollection = (action.payload.results ) ;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       state.dictionary = action.payload.dictionary;
     },
     resetDates(state) {
@@ -119,7 +123,7 @@ const mapSlice = createSlice({
     failedRequest: (state) => {
       state.featureCollection = null;
       state.previousQueryString = '';
-      // action.payload.status etc
+      state.requestingFeatures = false;
     },
   },
 });
@@ -163,10 +167,17 @@ export const selectQueryString = (mapState: MapState): string | undefined => {
 
 const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { state: RootState }>(
   'data/fetchData',
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  async (_, { dispatch, getState }): Promise<FetchFeaturesResposneType|any> => {
+    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  async (_, { dispatch, getState }): Promise<FetchFeaturesResposneType|any> => { 
     const mapState = getState().map;
+
+    if (mapState.requestingFeatures) {
+      return;
+    }
+
     const queryString: string | undefined = selectQueryString(mapState);
+    
+    // API requires a query
     if (!queryString) {
       return;
     }
@@ -176,9 +187,13 @@ const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { s
       return undefined;
     }
 
+    // Finally, commiting to sending a request
+    dispatch(mapSlice.actions.startFeaturesRequest());
+
     dispatch(setPreviousQueryString(queryString));
 
     let response;
+
     try {
       response = await fetch(`${searchEndpoint}?${queryString}`);
       const data = await response.json() as FetchFeaturesResposneType;
@@ -186,16 +201,20 @@ const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { s
     }
     catch (error) {
       console.error(error);
+    }
+    finally {
       dispatch(mapSlice.actions.failedRequest());
     }
   }
 );
+
 
 export const fetchFeatures = debounce(
   _fetchFeatures,
   config.gui.apiRequests.debounceMs,
   { immediate: true }
 );
+
 
 export const _fetchCsv: any = createAsyncThunk<any, any, { state: RootState }>(
   'data/fetchData',
