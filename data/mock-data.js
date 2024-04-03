@@ -8,7 +8,11 @@ if ( !SENSOR_DATA_CSV_PATH || !LOCATION_CSV_PATH ) {
     process.exit( -1 );
 }
 
-function generateCSV ( rows, filePath ) {
+function generateIPv4 () {
+    return Array.from( { length: 4 }, () => Math.floor( Math.random() * 256 ) ).join( '.' );
+}
+
+function generateSensorCsv ( rows, filePath ) {
     let csvContent = "logger_id,hw_version,sw_version,measurement_number,timestamp,rc_temperature,mag_x,mag_y,mag_z\n";
 
     for ( let row of rows ) {
@@ -19,7 +23,7 @@ function generateCSV ( rows, filePath ) {
     console.log( 'CSV file generated', filePath );
 }
 
-function generateLocationCSV ( locations, filePath ) {
+function generateLocationCsv ( locations, filePath ) {
     let csvContent = "logger_id,description,latitude,longitude\n";
 
     for ( let location of locations ) {
@@ -30,24 +34,29 @@ function generateLocationCSV ( locations, filePath ) {
     console.log( 'Location CSV file generated', filePath );
 }
 
-function generateData ( numRows, loggerIds ) {
+function generateSensorData ( loggerIds ) {
     let data = [];
-    let startDate = new Date(); // Current date and time
-    for ( let i = 0; i < numRows; i++ ) {
-        let randomIndex = Math.floor( Math.random() * loggerIds.length );
-        let timestamp = new Date( startDate.getTime() - i * 60 * 60 * 24 * 1000 ); // Subtract i days from the current date
-        let row = {
-            logger_id: loggerIds[ randomIndex ],
-            hw_version: Math.floor( Math.random() * 100 ),
-            sw_version: Math.floor( Math.random() * 100 ),
-            measurement_number: i + 1,
-            timestamp: timestamp.toISOString(),
-            rc_temperature: Math.random().toFixed( 2 ),
-            mag_x: Math.random().toFixed( 2 ),
-            mag_y: Math.random().toFixed( 2 ),
-            mag_z: Math.random().toFixed( 2 )
-        };
-        data.push( row );
+    let startDate = new Date();
+    let totalIntervals = 7 * 24 * 6; // 7 days * 24 hours * 6 intervals per hour
+    let interval = 10 * 60 * 1000; // 10 minutes in milliseconds
+
+    for ( const loggerId of loggerIds ) {
+        console.log( 'Logger ID', loggerId );
+        for ( let i = 0; i < totalIntervals; i++ ) {
+            let timestamp = new Date( startDate.getTime() - i * interval ); // Subtract i intervals from the current date
+            let row = {
+                logger_id: loggerId,
+                hw_version: Math.floor( Math.random() * 100 ),
+                sw_version: Math.floor( Math.random() * 100 ),
+                measurement_number: i + 1,
+                timestamp: timestamp.toISOString(),
+                rc_temperature: Math.random().toFixed( 2 ),
+                mag_x: Math.random().toFixed( 2 ),
+                mag_y: Math.random().toFixed( 2 ),
+                mag_z: Math.random().toFixed( 2 )
+            };
+            data.push( row );
+        }
     }
     return data;
 }
@@ -66,14 +75,9 @@ function generateLocationData ( numRows ) {
     return data;
 }
 
-function generateIPv4 () {
-    return Array.from( { length: 4 }, () => Math.floor( Math.random() * 256 ) ).join( '.' );
-}
-
-// Generate 100 rows of data for locations
 let locationRows = generateLocationData( 100 );
-generateLocationCSV( locationRows, LOCATION_CSV_PATH );
 
-// Use locationRows to generate data for sensordata
-let sensorRows = generateData( 1000, locationRows.map( location => location.logger_id ) );
-generateCSV( sensorRows, SENSOR_DATA_CSV_PATH );
+let sensorRows = generateSensorData( locationRows.map( location => location.logger_id ) );
+
+generateLocationCsv( locationRows, LOCATION_CSV_PATH );
+generateSensorCsv( sensorRows, SENSOR_DATA_CSV_PATH );
