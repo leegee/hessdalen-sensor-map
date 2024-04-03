@@ -17,8 +17,7 @@ import labelsLayer from './lib/map-base-layer/layer-labels';
 import baseLayerDark from './lib/map-base-layer/layer-dark';
 import baseLayerLight from './lib/map-base-layer/layer-osm';
 import baseLayerGeo from './lib/map-base-layer/layer-geo';
-import { updateVectorLayer as updateClusterOnlyLayer, vectorLayer as clusterOnlyLayer, setupHeatmapListeners } from './lib/HeatmapLayer';
-import { updateVectorLayer as updatePointsLayer, vectorLayer as pointsLayer } from './lib/PointsVectorLayer';
+import { updateVectorLayer as updatePointsLayer, vectorLayer as pointsLayer } from './lib/WebGlPointsLayer';
 import ThemeToggleButton from './Map/ThemeToggleButton';
 import LocaleManager from './LocaleManager';
 
@@ -26,19 +25,8 @@ import 'ol/ol.css';
 import './Map.css';
 
 export type MapBaseLayerKeyType = 'dark' | 'light' | 'geo';
-export type MapLayerKeyType = 'clusterOnly' | 'points'; // | 'mixedSearchResults'
 export type MapBaseLayersType = {
   [key in MapBaseLayerKeyType]: Layer
-}
-
-type MapLayersType = {
-  [key in MapLayerKeyType]: Layer;
-}
-
-const mapLayers: MapLayersType = {
-  clusterOnly: clusterOnlyLayer,
-  // mixedSearchResults: mixedSearchResultsLayer,
-  points: pointsLayer,
 }
 
 const mapBaseLayers: MapBaseLayersType = {
@@ -79,36 +67,6 @@ function clickMap(e: MapBrowserEvent<any>, map: Map, dispatch: Dispatch<UnknownA
   });
 }
 
-function setVisibleDataLayer(layerName: MapLayerKeyType) {
-  for (const l of Object.keys(mapLayers)) {
-    mapLayers[l as MapLayerKeyType].setVisible(l === layerName);
-  }
-}
-
-// function centerMapOnFeature(map: Map, feature: any) { // ugh
-//   const geometry = feature.getGeometry();
-//   if (geometry) {
-//     const coordinates = geometry.getCoordinates();
-//     map.getView().animate({
-//       center: coordinates,
-//       zoom: config.zoomLevelForPointDetails,
-//       duration: 500,
-//     });
-//   }
-// }
-
-// function findFeatureById(layer: Layer, id: string | number): Feature | null {
-//   const source = layer.getSource() as VectorSource;
-//   const features = source.getFeatures();
-
-//   for (const feature of features) {
-//     if (feature.get('id') == id) {
-//       return feature;
-//     }
-//   }
-//   return null;
-// }
-
 function extentMinusPanel(bounds: [number, number, number, number]) {
   // Calculate the width of the extent
   const extentWidth = bounds[2] - bounds[0];
@@ -119,8 +77,7 @@ function extentMinusPanel(bounds: [number, number, number, number]) {
 
 const OpenLayersMap: React.FC = () => {
   const dispatch = useDispatch();
-  const pointsCount = useSelector(selectPointsCount);
-  const { center, zoom, bounds, featureCollection, q } = useSelector((state: RootState) => state.map);
+  const { center, zoom, bounds, featureCollection } = useSelector((state: RootState) => state.map);
   const { selectionId } = useSelector((state: RootState) => state.gui);
   const basemapSource: MapBaseLayerKeyType = useSelector(selectBasemapSource);
   const mapElementRef = useRef<HTMLDivElement>(null);
@@ -146,18 +103,12 @@ const OpenLayersMap: React.FC = () => {
 
   // Re-render visible layers when user selects a point
   useEffect(() => {
-    Object.values(mapLayers).forEach((layer) => {
-      if (layer.getVisible()) {
-        const source = layer.getSource();
-        source?.changed();
-      }
-    });
+    const source = pointsLayer.getSource();
+    source?.changed();
   }, [selectionId]);
 
   useEffect(() => {
     if (mapElementRef.current) {
-      setVisibleDataLayer('clusterOnly');
-
       const map = new Map({
         target: mapElementRef.current,
         view: new View({
@@ -168,12 +119,11 @@ const OpenLayersMap: React.FC = () => {
         layers: [
           ...Object.values(mapBaseLayers),
           labelsLayer,
-          ...Object.values(mapLayers)
+          pointsLayer,
         ],
       });
 
       mapRef.current = map;
-      setupHeatmapListeners(mapRef.current);
       setupFeatureHighlighting(mapRef.current);
 
       map.on('moveend', debounce(handleMoveEnd, Number(config.gui.debounce || 500), { immediate: true }));
@@ -196,21 +146,8 @@ const OpenLayersMap: React.FC = () => {
   }, [dispatch, bounds, zoom]);
 
   useEffect(() => {
-    // if (!mapElementRef.current || featureCollection === null) return;
     if (!mapElementRef.current || !featureCollection) return;
-    if (q && q.length >= config.minQLength && (!pointsCount || pointsCount < 1000)) {
-      // updateMixedSearchResultsLayer(featureCollection);
-      // setVisibleDataLayer('mixedSearchResults');
-      updatePointsLayer(featureCollection);
-      setVisibleDataLayer('points');
-    } else if (!pointsCount && zoom < config.zoomLevelForPoints) {
-      updateClusterOnlyLayer(featureCollection);
-      setVisibleDataLayer('clusterOnly');
-    } else {
-      updatePointsLayer(featureCollection);
-      setVisibleDataLayer('points');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    updatePointsLayer(featureCollection);
   }, [featureCollection]);
 
   return (
