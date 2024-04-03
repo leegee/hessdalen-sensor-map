@@ -10,7 +10,8 @@ import { RootState } from '../redux/store';
 import './DateTime.css';
 import config from '@hessdalen-sensor-map/config/src';
 
-const ANIMATION_SPEED = 1000;
+const ANIMATION_FRAME_MS = 1000;
+const SLIDER_DEBOUNCE_MS = 1000;
 
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
@@ -36,24 +37,23 @@ const DateTime: React.FC = () => {
         }
     }, [dictionary, gotTheFirstDictionary]);
 
-    const handleSubmit = debounce(_handleSubmit, ANIMATION_SPEED - 1);
+    const handleSliderChange = debounce((value: number) => {
+        setLocalDate(value);
+        const fromDate = value - Number(config.gui.time_window_ms);
+        const toDate = value + Number(config.gui.time_window_ms);
+        dispatch(setFromDate(fromDate));
+        dispatch(setToDate(toDate));
+        console.log({ action: 'slider change', localDate: value, fromDate, toDate });
+    }, SLIDER_DEBOUNCE_MS);
 
-    function _handleSubmit() {
+    const handleSubmit = debounce(() => {
         const fromDate = localDate - Number(config.gui.time_window_ms);
         const toDate = localDate + Number(config.gui.time_window_ms);
         dispatch(setFromDate(fromDate));
         dispatch(setToDate(toDate));
-
         console.log({ action: 'submit', localDate, fromDate, toDate });
-
         dispatch(fetchFeatures());
-    }
-
-    function handleSliderChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const value: number = parseInt(e.target.value);
-        setLocalDate(value);
-        handleSubmit();
-    }
+    }, ANIMATION_FRAME_MS - 10);
 
     function toggleAnimation() {
         setIsAnimating(prev => !prev);
@@ -74,7 +74,7 @@ const DateTime: React.FC = () => {
                         return prevLocalDate;
                     }
                 });
-            }, ANIMATION_SPEED);
+            }, ANIMATION_FRAME_MS);
         }
         else if (intervalId) {
             clearInterval(intervalId);
@@ -96,7 +96,11 @@ const DateTime: React.FC = () => {
                 min={localMin}
                 max={localMax}
                 value={localDate}
-                onChange={handleSliderChange}
+                onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    setLocalDate(value);
+                    handleSliderChange(value);
+                }}
             />
             <span className={'submit ' + (isAnimating ? 'stop' : 'start')} onClick={toggleAnimation} title={get('datetime.animate')} aria-label={get('datetime.animate')}></span>
         </nav>
