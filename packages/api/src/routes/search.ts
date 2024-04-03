@@ -15,19 +15,6 @@ type SqlBitsType = {
     orderByClause?: string[],
 };
 
-const epsMapping = [
-    200000,
-    200000,
-    200000,
-    160000,
-    90000,
-    25000,
-    10000,
-    7000,
-    5000,
-];
-
-
 export async function search(ctx: Context) {
     const body: QueryResponseType = {
         msg: '',
@@ -46,35 +33,13 @@ export async function search(ctx: Context) {
         })
     }
 
-    if (userArgs.q && userArgs.q.length < config.minQLength) {
-        throw new CustomError({
-            action: 'query',
-            msg: 'Text query too short',
-            details: { q: userArgs.q }
-        });
-    }
-
     let forErrorReporting = {};
-
     const acceptHeader = ctx.headers.accept || '';
     const sendCsv = acceptHeader.includes('text/csv');
 
     try {
-        let sql: string;
         let sqlBits = constructSqlBits(userArgs);
-
-        if (sendCsv) {
-            sql = `SELECT * FROM sightings WHERE ${sqlBits.whereColumns.join(' AND ')}`;
-        }
-        else {
-            sql = geoJsonForPoints(sqlBits);    
-        }
-        // else if (userArgs.zoom >= config.zoomLevelForPoints) {
-        //     sql = geoJsonForPoints(sqlBits);
-        // }
-        // else {
-        //     sql = geoJsonForClusters(sqlBits, userArgs);
-        // }
+        let sql = sendCsv ? csvForPoints(sqlBits) : geoJsonForPoints(sqlBits);
 
         const formattedQueryForLogging = sql.replace(/\$(\d+)/g, (_: string, index: number) => {
             const param = sqlBits.whereParams ? sqlBits.whereParams[index - 1] : undefined;
@@ -276,12 +241,22 @@ function geoJsonForPoints(sqlBits: SqlBitsType) {
                 'geometry', ST_AsGeoJSON(s.point, 3857)::jsonb,
                 'properties', to_jsonb(s) - 'point'
             ) AS feature
-            FROM (
-                SELECT ${sqlBits.selectColumns.join(', ')} FROM sensordata
-            JOIN
-                loggers ON sensordata.logger_id = loggers.logger_id
-                WHERE ${sqlBits.whereColumns.join(' AND ')}
-                ${sqlBits.orderByClause ? ' ORDER BY ' + sqlBits.orderByClause.join(',') : ''}
-            ) AS s
+        FROM (
+            ${innserSelect(sqlBits)}
         ) AS fc`;
+}
+
+function csvForPoints(sqlBits: SqlBitsType) {
+    return innserSelect(sqlBits);
+}
+
+function innserSelect(sqlBits: SqlBitsType) {
+    return `SELECT ${sqlBits.selectColumns.join(', ')} 
+    FROM sensordata
+    JOIN
+        loggers ON sensordata.logger_id = loggers.logger_id
+    WHERE ${sqlBits.whereColumns.join(' AND ')}
+        ${sqlBits.orderByClause ? ' ORDER BY ' + sqlBits.orderByClause.join(',') : ''}
+    ) AS s`;
+
 }
