@@ -10,7 +10,7 @@ import { RootState } from '../redux/store';
 import './DateTime.css';
 
 const TIME_WINDOW_MS = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-const ANIMATION_SPEED = 1000 * 4;
+const ANIMATION_SPEED = 1000;
 
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
@@ -24,7 +24,7 @@ const DateTime: React.FC = () => {
     const [localDate, setLocalDate] = useState<number>(initialDate);
     const [localMin, setLocalMin] = useState<number>(0);
     const [localMax, setLocalMax] = useState<number>(0);
-    const [isAnimating, setIsAnimating] = useState<NodeJS.Timer | undefined>();
+    const [isAnimating, setIsAnimating] = useState<boolean>(false);
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
 
     useEffect(() => {
@@ -36,13 +36,13 @@ const DateTime: React.FC = () => {
         }
     }, [dictionary, gotTheFirstDictionary]);
 
-    const debouncedHandleSubmit = debounce(handleSubmit, 500);
+    const handleSubmit = debounce(_handleSubmit, ANIMATION_SPEED - 1);
 
-    function handleSubmit() {
-        const fromDate = new Date(Number(localDate) - TIME_WINDOW_MS).getTime();
-        const toDate = new Date(Number(localDate) + TIME_WINDOW_MS).getTime();
+    function _handleSubmit() {
+        const fromDate = localDate - TIME_WINDOW_MS;
+        const toDate = localDate + TIME_WINDOW_MS;
 
-        console.log({ action: 'submit', localDate, localMin, localMax });
+        console.log({ action: 'submit', localDate, fromDate, toDate });
 
         dispatch(setFromDate(fromDate));
         dispatch(setToDate(toDate));
@@ -52,33 +52,38 @@ const DateTime: React.FC = () => {
     function handleSliderChange(e: React.ChangeEvent<HTMLInputElement>) {
         const value: number = parseInt(e.target.value);
         setLocalDate(value);
-        debouncedHandleSubmit();
-    }
-
-    function animate() {
-        if (!localMax || !localMin) {
-            console.warn('animate called too early');
-            return;
-        }
-        let newLocalDate = localDate + TIME_WINDOW_MS;
-        if (newLocalDate > localMax) {
-            newLocalDate = localMin;
-        }
-        setLocalDate(newLocalDate);
         handleSubmit();
     }
 
-    function handleAnimate() {
-        if (isAnimating) {
-            console.info('Stop animation');
-            clearInterval(isAnimating);
-            setIsAnimating(undefined);
-        } else {
-            console.info('Start animation');
-            const intervalId = setInterval(animate, ANIMATION_SPEED);
-            setIsAnimating(intervalId);
-        }
+    function toggleAnimation() {
+        setIsAnimating(prev => !prev);
     }
+
+    useEffect(() => {
+        let intervalId: NodeJS.Timeout | undefined;
+
+        if (isAnimating) {
+            intervalId = setInterval(() => {
+                setLocalDate(prevLocalDate => {
+                    const newLocalDate = prevLocalDate + TIME_WINDOW_MS;
+                    if (newLocalDate <= localMax) {
+                        handleSubmit();
+                        return newLocalDate;
+                    } else {
+                        setIsAnimating(false);
+                        return prevLocalDate;
+                    }
+                });
+            }, ANIMATION_SPEED);
+        }
+        else if (intervalId) {
+            clearInterval(intervalId);
+        }
+
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [isAnimating, localMax, handleSubmit]);
 
     return (
         <nav id='datetime-selector' className='component highlightable'>
@@ -93,7 +98,7 @@ const DateTime: React.FC = () => {
                 value={localDate}
                 onChange={handleSliderChange}
             />
-            <span className={'submit ' + (isAnimating ? 'stop' : 'start')} onClick={handleAnimate} title={get('datetime.animate')} aria-label={get('datetime.animate')}></span>
+            <span className={'submit ' + (isAnimating ? 'stop' : 'start')} onClick={toggleAnimation} title={get('datetime.animate')} aria-label={get('datetime.animate')}></span>
         </nav>
     );
 }
