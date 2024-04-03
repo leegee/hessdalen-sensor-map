@@ -67,9 +67,9 @@ const config: ConfigType = {
       debounceMs: 1000,
     },
     map: {
-      centre: [11.4069, 62.8436] as [number, number], 
+      centre: [10.2, 62.2] as [number, number], 
       cluster_eps_metres: 50000, // The distance between clusters
-      initZoom: 7,
+      initZoom: 9,
     }
   },
   zoomLevelForPoints: 8,
