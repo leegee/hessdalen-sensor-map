@@ -96,6 +96,65 @@ async function sendCsvResponse(ctx: Context, sql: string, sqlBits: SqlBitsType) 
     bodyStream.end();
 }
 
+async function getCleanArgs(ctx) {
+    const args: ParsedUrlQuery = ctx.request.query;
+    const userArgs: QueryParams = {
+        zoom: parseInt(args.zoom as string),
+        minlng: parseFloat(args.minlng as string),
+        minlat: parseFloat(args.minlat as string),
+        maxlng: parseFloat(args.maxlng as string),
+        maxlat: parseFloat(args.maxlat as string),
+
+        to_date: args.to_date ? (Array.isArray(args.to_date) ? args.to_date[0] : args.to_date) : undefined,
+        from_date: args.from_date ? (Array.isArray(args.from_date) ? args.from_date[0] : args.from_date) : undefined,
+
+        // Potentially the subject of a text search:
+        q: args.q ? String(args.q).trim() : undefined,
+
+        // Potentially the subject of the text search: undefined = search all cols defined in config.api.searchableTextColumnNames
+        // Not yet implemented.
+        q_subject: args.q_subject && [config.api.searchableTextColumnNames].includes(
+            args.q_subject instanceof Array ? args.q_subject : [args.q_subject]
+        ) ? String(args.q_subject) : undefined,
+
+        sort_order: String(args.sort_order) === 'ASC' || String(args.sort_order) === 'DESC' ? String(args.sort_order) as 'ASC' | 'DESC' : undefined,
+
+        ... (
+            isFeatureSourceAttributeType(args.source)
+                ? { source: args.source as FeatureSourceAttributeType }
+                : {}
+        )
+    };
+
+    if (!userArgs.sort_order) {
+        userArgs.sort_order = 'DESC';
+    }
+
+    if (!userArgs.from_date || !userArgs.to_date) {
+        const { rows } = await ctx.dbh.query("SELECT MIN(timestamp) FROM sensordata");
+        console.log('xxx', rows[0].min);
+        const from_date_obj = new Date(rows[0].min);
+        userArgs.from_date = from_date_obj.toISOString();
+        userArgs.to_date = new Date(from_date_obj.getTime() + + Number(config.gui.time_window_ms)).toISOString();
+    }
+
+    else {
+        console.log('xxx got', userArgs);
+        if (userArgs.from_date) {
+            userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
+        }
+        if (userArgs.to_date) {
+            userArgs.to_date = new Date(Number(userArgs.to_date)).toISOString();
+        }
+    }
+
+    return (
+        userArgs !== null &&
+        userArgs.minlat !== undefined && userArgs.minlng !== undefined &&
+        userArgs.maxlat !== undefined && userArgs.maxlng !== undefined
+    ) ? userArgs : null;
+}
+
 function constructSqlBits(userArgs: QueryParams): SqlBitsType {
     const whereColumns: string[] = [];
     const selectColumns = [
@@ -144,6 +203,43 @@ function constructSqlBits(userArgs: QueryParams): SqlBitsType {
     return rv;
 }
 
+
+function innserSelect(sqlBits: SqlBitsType) {
+    return `SELECT ${sqlBits.selectColumns.join(', ')} 
+    FROM sensordata
+    JOIN
+        loggers ON sensordata.logger_id = loggers.logger_id
+    WHERE ${sqlBits.whereColumns.join(' AND ')}
+        ${sqlBits.orderByClause ? ' ORDER BY ' + sqlBits.orderByClause.join(',') : ''}
+    ) AS s`;
+}
+
+function geoJsonForPoints(sqlBits: SqlBitsType) {
+    return `SELECT jsonb_build_object(
+            'type', 'FeatureCollection',
+            'features', jsonb_agg(feature),
+            'pointsCount', COUNT(*),
+            'clusterCount', 0
+        )
+        FROM (
+            SELECT jsonb_build_object(
+                'type', 'Feature',
+                'geometry', ST_AsGeoJSON(s.point, 3857)::jsonb,
+                'properties', to_jsonb(s) - 'point'
+            ) AS feature
+        FROM (
+            ${innserSelect(sqlBits)}
+        ) AS fc`;
+}
+
+
+
+
+function csvForPoints(sqlBits: SqlBitsType) {
+    return innserSelect(sqlBits);
+}
+
+
 async function getDictionary(featureCollection: FeatureCollection | undefined) {
     const dictionary: MapDictionary = {
         datetime: {
@@ -178,97 +274,4 @@ async function getDictionary(featureCollection: FeatureCollection | undefined) {
     dictionary.datetime = { min, max };
 
     return dictionary;
-}
-
-async function getCleanArgs(ctx) {
-    const args: ParsedUrlQuery = ctx.request.query;
-    const userArgs: QueryParams = {
-        zoom: parseInt(args.zoom as string),
-        minlng: parseFloat(args.minlng as string),
-        minlat: parseFloat(args.minlat as string),
-        maxlng: parseFloat(args.maxlng as string),
-        maxlat: parseFloat(args.maxlat as string),
-
-        to_date: args.to_date ? (Array.isArray(args.to_date) ? args.to_date[0] : args.to_date) : undefined,
-        from_date: args.from_date ? (Array.isArray(args.from_date) ? args.from_date[0] : args.from_date) : undefined,
-
-        // Potentially the subject of a text search:
-        q: args.q ? String(args.q).trim() : undefined,
-
-        // Potentially the subject of the text search: undefined = search all cols defined in config.api.searchableTextColumnNames
-        // Not yet implemented.
-        q_subject: args.q_subject && [config.api.searchableTextColumnNames].includes(
-            args.q_subject instanceof Array ? args.q_subject : [args.q_subject]
-        ) ? String(args.q_subject) : undefined,
-
-        sort_order: String(args.sort_order) === 'ASC' || String(args.sort_order) === 'DESC' ? String(args.sort_order) as 'ASC' | 'DESC' : undefined,
-
-        ... (
-            isFeatureSourceAttributeType(args.source)
-                ? { source: args.source as FeatureSourceAttributeType }
-                : {}
-        )
-    };
-
-    if (!userArgs.sort_order) {
-        userArgs.sort_order = 'DESC';
-    }
-
-    if (!userArgs.from_date || !userArgs.to_date) {
-        const { rows } = await ctx.dbh.query("SELECT MIN(timestamp) FROM sensordata");
-        console.log('xxx',rows[0].min);
-        userArgs.from_date = new Date(String(rows[0].min)).toISOString();
-        userArgs.to_date = new Date(String(rows[0].min + config.gui.time_window_ms)).toISOString();
-        console.log('xxx SET', userArgs);
-    }
-
-    else {
-        console.log('xxx got', userArgs);
-        if (userArgs.from_date) {
-            userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
-        }
-        if (userArgs.to_date) {
-            userArgs.to_date = new Date(Number(userArgs.to_date)).toISOString();
-        }
-    }
-
-    return (
-        userArgs !== null &&
-        userArgs.minlat !== undefined && userArgs.minlng !== undefined &&
-        userArgs.maxlat !== undefined && userArgs.maxlng !== undefined
-    ) ? userArgs : null;
-}
-
-
-function geoJsonForPoints(sqlBits: SqlBitsType) {
-    return `SELECT jsonb_build_object(
-            'type', 'FeatureCollection',
-            'features', jsonb_agg(feature),
-            'pointsCount', COUNT(*),
-            'clusterCount', 0
-        )
-        FROM (
-            SELECT jsonb_build_object(
-                'type', 'Feature',
-                'geometry', ST_AsGeoJSON(s.point, 3857)::jsonb,
-                'properties', to_jsonb(s) - 'point'
-            ) AS feature
-        FROM (
-            ${innserSelect(sqlBits)}
-        ) AS fc`;
-}
-
-function csvForPoints(sqlBits: SqlBitsType) {
-    return innserSelect(sqlBits);
-}
-
-function innserSelect(sqlBits: SqlBitsType) {
-    return `SELECT ${sqlBits.selectColumns.join(', ')} 
-    FROM sensordata
-    JOIN
-        loggers ON sensordata.logger_id = loggers.logger_id
-    WHERE ${sqlBits.whereColumns.join(' AND ')}
-        ${sqlBits.orderByClause ? ' ORDER BY ' + sqlBits.orderByClause.join(',') : ''}
-    ) AS s`;
-
 }
