@@ -46,25 +46,19 @@ const Tooltip: React.FC<TooltipComponentProps> = ({ map }) => {
             overlay.setPosition(undefined);
         }
         else {
-            let tooltipContent = '';
-            const location_text = feature.get('location_text') as string;
-            if (location_text) {
-                if (features.length === 1) {
-                    const date = new Date(feature.get('datetime') as string);
-                    tooltipContent = '<small>' + new Intl.DateTimeFormat(config.locale).format(date) + '</small><br/>';
-                }
-                tooltipContent += '<b font-style="font-size:120%">' + feature.get('location_text') + '</b>';
-                if (features.length > 1) {
-                    tooltipContent += ' x' + features.length;
-                }
-                const score = feature.get('search_score') as number;
-                if (score) {
-                    tooltipContent += '<br/><small style="font-weight:light">Search score: ' + score + '</small>';
-                }
+            const props = feature.getProperties();
+            let tooltipContent = `
+            <small>
+                ${new Intl.DateTimeFormat(config.locale).format(new Date(feature.get('timestamp') as string))}
+            </small>
+            <h4>${props.logger_id}</h4>
+            <table><tbody>`;
+
+            for (const prop in props) {
+                tooltipContent += `<tr><th>${prop}</th><td>${props[prop]}</td></tr>`;
             }
-            else {
-                tooltipContent = get('panel.cluster_count', { count: Number(feature.get('num_points')) });
-            }
+
+            tooltipContent += '</tbody></table>';
 
             if (tooltipContent && tooltipElementRef.current !== null) {
                 tooltipElementRef.current.innerHTML = tooltipContent;
