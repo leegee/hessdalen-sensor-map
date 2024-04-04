@@ -35,10 +35,10 @@ export type ConfigType = {
       centre: [number, number];
       cluster_eps_metres: number;
       initZoom: number;
+      zoomLevelForPoints: number;
+      zoomLevelForPointDetails: number;
     };
   };
-  zoomLevelForPoints: number;
-  zoomLevelForPointDetails: number;
   minQLength: number;
 };
 
@@ -68,14 +68,14 @@ const config: ConfigType = {
       debounceMs: 1000,
     },
     map: {
-      centre: [10.2, 62.2] as [number, number], 
+      centre: [10.59, 62.25] as [number, number], 
       cluster_eps_metres: 50000, // The distance between clusters
-      initZoom: 9,
+      initZoom: 10,
+      zoomLevelForPoints: 8,
+      zoomLevelForPointDetails: 11,
     },
-    time_window_ms: 12 * 60 * 60 * 1000, // 12 hours in milliseconds
+    time_window_ms: 12 * 60 * 1000, // 12 hours in milliseconds
   },
-  zoomLevelForPoints: 8,
-  zoomLevelForPointDetails: 11,
   minQLength: 3,
   flags: {
     USE_BOUNDS_WITHOUT_PANEL: false,
