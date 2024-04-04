@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { get } from 'react-intl-universal';
-import debounce from 'debounce';
 
 import { fetchFeatures, setFromDate, setToDate } from '../redux/mapSlice';
 import { RootState } from '../redux/store';
@@ -11,8 +10,6 @@ import './DateTime.css';
 import config from '@hessdalen-sensor-map/config/src';
 
 const ANIMATION_SPEED = 1000;
-const DEBOUNCE_DELAY = ANIMATION_SPEED - 1;
-const SUBIT_DELAY = 1000;
 
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
@@ -31,39 +28,38 @@ const DateTime: React.FC = () => {
 
     useEffect(() => {
         if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
-            setLocalDate(Number(dictionary.datetime.min));
+            setGotTheFirstDictionary(true);
             setLocalMin(Number(dictionary.datetime.min));
             setLocalMax(Number(dictionary.datetime.max));
-            setGotTheFirstDictionary(true);
+            setLocalDate(Number(dictionary.datetime.min));
         }
     }, [dictionary, gotTheFirstDictionary]);
 
-    const handleSliderChange = debounce((value: number) => {
-        setLocalDate(value);
-        const fromDate = value - Number(config.gui.time_window_ms);
-        const toDate = value + Number(config.gui.time_window_ms);
-        dispatch(setFromDate(fromDate));
-        dispatch(setToDate(toDate));
-        // console.log({ action: 'slider change', localDate: value, fromDate, toDate });
-    }, DEBOUNCE_DELAY);
+    // eslint-disable-next-line prefer-const
+    let debounceTimer = 0;
 
-    const handleSubmit = debounce(() => {
-        const fromDate = localDate - Number(config.gui.time_window_ms);
-        const toDate = localDate + Number(config.gui.time_window_ms);
-        dispatch(setFromDate(fromDate));
-        dispatch(setToDate(toDate));
-        console.log({ action: 'submit', localDate, fromDate, toDate });
+    const requestFetchFeatures = useCallback(() => {
+        const preDebouncer = debounceTimer;
+        debounceTimer + new Date().getTime();
+        if (preDebouncer > 0 && (preDebouncer - debounceTimer < 1000)) {
+            return;
+        }
+
+        console.debug({ action: 'submit', localDate, debug_timestamp: new Date().getTime() });
+        dispatch(setFromDate(
+            localDate - Number(config.gui.time_window_ms)
+        ));
+        dispatch(setToDate(
+            localDate + Number(config.gui.time_window_ms)
+        ));
         dispatch(fetchFeatures());
-    }, SUBIT_DELAY);
+    }, [dispatch, localDate, debounceTimer]);
 
-    function toggleAnimation() {
-        setIsAnimating(prev => !prev);
-    }
+    const debouncedFetchFeatures = requestFetchFeatures;
 
-    const handleInput = (value: number) => {
-        setLocalDate(value);
-        handleSliderChange(value);
-    };
+    const handleSliderChange = (value: number) => setLocalDate(Number(value));
+
+    const toggleAnimation = () => setIsAnimating(prev => !prev);
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout | undefined;
@@ -73,7 +69,7 @@ const DateTime: React.FC = () => {
                 setLocalDate(prevLocalDate => {
                     const newLocalDate = prevLocalDate + config.gui.time_window_ms;
                     if (newLocalDate <= localMax) {
-                        handleSubmit();
+                        requestFetchFeatures();
                         return newLocalDate;
                     } else {
                         setIsAnimating(false);
@@ -89,7 +85,7 @@ const DateTime: React.FC = () => {
         return () => {
             clearInterval(intervalId);
         };
-    }, [isAnimating, localMax, handleSubmit]);
+    }, [isAnimating, localMax, requestFetchFeatures]);
 
     return (
         <nav id='datetime-selector' className='component highlightable'>
@@ -102,7 +98,8 @@ const DateTime: React.FC = () => {
                 min={localMin}
                 max={localMax}
                 value={localDate}
-                onInput={(e) => handleInput(parseInt(e.currentTarget.value))}
+                onInput={(e) => handleSliderChange(parseInt(e.currentTarget.value))}
+                onMouseUp={debouncedFetchFeatures}
             />
             <span className={'submit ' + (isAnimating ? 'stop' : 'start')} onClick={toggleAnimation} title={get('datetime.animate')} aria-label={get('datetime.animate')}></span>
         </nav>
