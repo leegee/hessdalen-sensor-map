@@ -56,6 +56,8 @@ export async function search(ctx: Context) {
             const { rows } = await ctx.dbh.query(sql, sqlBits.whereParams ? sqlBits.whereParams : undefined);
             if (rows[0].jsonb_build_object.features === null && config.api.debug) {
                 console.warn({ action: 'query', msg: 'Found no features', sql, sqlBits });
+            } else {
+                console.log({ action: 'query', msg: `Found ${rows.length} features` });
             }
             body.results = rows[0].jsonb_build_object as FeatureCollection;
             body.dictionary = await getDictionary(body.results);
@@ -132,14 +134,12 @@ async function getCleanArgs(ctx) {
 
     if (!userArgs.from_date || !userArgs.to_date) {
         const { rows } = await ctx.dbh.query("SELECT MIN(timestamp) FROM sensordata");
-        console.log('xxx', rows[0].min);
         const from_date_obj = new Date(rows[0].min);
         userArgs.from_date = from_date_obj.toISOString();
         userArgs.to_date = new Date(from_date_obj.getTime() + + Number(config.gui.time_window_ms)).toISOString();
     }
 
     else {
-        console.log('xxx got', userArgs);
         if (userArgs.from_date) {
             userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
         }

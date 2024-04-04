@@ -49,7 +49,7 @@ export interface MapState {
   basemapSource: string;
   previousQueryString: string;
   requestingCsv: boolean;
-  requestingFeatures: boolean;
+  runningFeaturesRequest: boolean;
   source: FeatureSourceAttributeType;
 }
 
@@ -67,7 +67,7 @@ const initialState: MapState = {
   basemapSource: localStorage.getItem('basemap_source') ?? 'geo',
   previousQueryString: '',
   requestingCsv: false,
-  requestingFeatures: false,
+  runningFeaturesRequest: false,
   source: 'not-specified',
 };
 
@@ -81,7 +81,17 @@ const mapSlice = createSlice({
       state.bounds = action.payload.bounds;
     },
     startFeaturesRequest(state) {
-      state.requestingFeatures = true;
+      state.runningFeaturesRequest = true;
+      console.log('Features request started');
+    },
+    doneFeaturesRequest(state) {
+      state.runningFeaturesRequest = true;
+      console.log('Features request done');
+    },
+    failedFeaturesRequest: (state) => {
+      state.featureCollection = null;
+      state.previousQueryString = '';
+      state.runningFeaturesRequest = false;
     },
     setFeatureCollection(state, action: PayloadAction<FetchFeaturesResposneType>) {
       state.featureCollection = (action.payload.results ) ;
@@ -119,11 +129,6 @@ const mapSlice = createSlice({
     },
     csvRequestFailed: (state) => {
       state.requestingCsv = false;
-    },
-    failedRequest: (state) => {
-      state.featureCollection = null;
-      state.previousQueryString = '';
-      state.requestingFeatures = false;
     },
   },
 });
@@ -171,7 +176,7 @@ const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { s
   async (_, { dispatch, getState }): Promise<FetchFeaturesResposneType|any> => { 
     const mapState = getState().map;
 
-    if (mapState.requestingFeatures) {
+    if (mapState.runningFeaturesRequest) {
       return;
     }
 
@@ -197,13 +202,15 @@ const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { s
     try {
       response = await fetch(`${searchEndpoint}?${queryString}`);
       const data = await response.json() as FetchFeaturesResposneType;
+      console.log('Features', response.status);
       dispatch(mapSlice.actions.setFeatureCollection(data));
     }
     catch (error) {
       console.error(error);
+      dispatch(mapSlice.actions.failedFeaturesRequest());
     }
     finally {
-      dispatch(mapSlice.actions.failedRequest());
+      dispatch(mapSlice.actions.doneFeaturesRequest());
     }
   }
 );

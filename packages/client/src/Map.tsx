@@ -9,7 +9,7 @@ import type Layer from 'ol/layer/Layer';
 
 import config from '@hessdalen-sensor-map/config/src';
 import { RootState } from './redux/store';
-import { setMapParams, fetchFeatures, selectBasemapSource, selectPointsCount, resetDates } from './redux/mapSlice';
+import { setMapParams, fetchFeatures, selectBasemapSource, resetDates } from './redux/mapSlice';
 import { setSelectionId } from './redux/guiSlice';
 import { setupFeatureHighlighting } from './Map/VectorLayerHighlight';
 import Tooltip from './Map/Tooltip';
@@ -77,7 +77,7 @@ function extentMinusPanel(bounds: [number, number, number, number]) {
 
 const OpenLayersMap: React.FC = () => {
   const dispatch = useDispatch();
-  const { center, zoom, bounds, featureCollection } = useSelector((state: RootState) => state.map);
+  const { bounds, center, featureCollection, zoom } = useSelector((state: RootState) => state.map);
   const { selectionId } = useSelector((state: RootState) => state.gui);
   const basemapSource: MapBaseLayerKeyType = useSelector(selectBasemapSource);
   const mapElementRef = useRef<HTMLDivElement>(null);
@@ -85,17 +85,19 @@ const OpenLayersMap: React.FC = () => {
 
   const handleMoveEnd = () => {
     if (!mapRef.current) return;
-    const center = mapRef.current.getView().getCenter() as [number, number];
-    const zoom = Number(mapRef.current.getView().getZoom()) || 1;
     const extent = mapRef.current.getView().calculateExtent(mapRef.current.getSize());
     const bounds = transformExtent(extent, 'EPSG:3857', 'EPSG:4326') as [number, number, number, number];
 
     dispatch(setMapParams({
-      center,
-      zoom,
+      center: mapRef.current.getView().getCenter() as [number, number],
+      zoom: Number(mapRef.current.getView().getZoom()) || 1,
       bounds: config.flags.USE_BOUNDS_WITHOUT_PANEL ? extentMinusPanel(bounds) : bounds
     }));
   };
+
+  useEffect(() => {
+    dispatch(fetchFeatures());
+  }, [bounds, center, dispatch, zoom]);
 
   useEffect(() => {
     setTheme(basemapSource);
@@ -135,15 +137,6 @@ const OpenLayersMap: React.FC = () => {
     return () => mapRef.current?.dispose();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
-
-  useEffect(() => {
-    const debouncedFetchFeatures = debounce(() => {
-      dispatch(fetchFeatures());
-    }, 750);
-
-    debouncedFetchFeatures();
-
-  }, [dispatch, bounds, zoom]);
 
   useEffect(() => {
     if (!mapElementRef.current || !featureCollection) return;
