@@ -24,13 +24,13 @@ const ReportButton: React.FC = () => {
 
     return (
         <button className='component highlightable report-button' onClick={togglePanel}>
-            {panel === 'narrow' ? (
+            {panel === 'full' ? (
                 <>
-                    <span className='open-full-width' title={get('open')} aria-label={get('open')} />
+                    <span className='close-full-width' title={get('close')} aria-label={get('close')} />
                 </>
             ) : (
                 <>
-                    <span className='close-full-width' title={get('close')} aria-label={get('close')} />
+                    <span className='open-full-width' title={get('open')} aria-label={get('open')} />
                 </>
             )}
         </button>
