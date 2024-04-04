@@ -85,7 +85,7 @@ const mapSlice = createSlice({
       console.log('Features request started');
     },
     doneFeaturesRequest(state) {
-      state.runningFeaturesRequest = true;
+      state.runningFeaturesRequest = false;
       console.log('Features request done');
     },
     failedFeaturesRequest: (state) => {
@@ -175,8 +175,10 @@ const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { s
     // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   async (_, { dispatch, getState }): Promise<FetchFeaturesResposneType|any> => { 
     const mapState = getState().map;
+    console.debug('fetchFeatures - enter');
 
     if (mapState.runningFeaturesRequest) {
+      console.debug('fetchFeatures already running, bail');
       return;
     }
 
@@ -184,6 +186,7 @@ const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { s
     
     // API requires a query
     if (!queryString) {
+      console.debug('fetchFeatures - no query string');
       return;
     }
 
@@ -196,6 +199,8 @@ const _fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { s
     dispatch(mapSlice.actions.startFeaturesRequest());
 
     dispatch(setPreviousQueryString(queryString));
+
+    console.debug('fetchFeatures - fetch');
 
     let response;
 
