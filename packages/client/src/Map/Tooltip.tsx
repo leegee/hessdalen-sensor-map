@@ -73,11 +73,9 @@ const Tooltip: React.FC<TooltipComponentProps> = ({ map }) => {
                     const cursorX = event.pixel[0];
                     const cursorY = event.pixel[1];
                     const positioningY = cursorY < viewportHeight / 3 ? 'top' : 'bottom';
-                    const positioningX = cursorX < viewportWidth / 3 ? 'right' : 'left';
+                    const positioningX = cursorX < viewportWidth / 2 ? 'left' : 'right';
                     const positioning = positioningY + '-' + positioningX as Positioning;
-                    console.log(positioning)
                     overlay.setPosition(event.coordinate);
-                    // overlay.setPositioning('bottom-right');  
                     overlay.setPositioning(positioning);
                 } else {
                     overlay.setPosition(event.coordinate);
