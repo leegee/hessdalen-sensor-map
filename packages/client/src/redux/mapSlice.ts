@@ -115,7 +115,6 @@ const mapSlice = createSlice({
       localStorage.setItem('basemap_source', state.basemapSource);
     },
     setSource: (state, action: PayloadAction<FeatureSourceAttributeType>) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       state.source = action.payload;
     },
     setPreviousQueryString: (state, action: PayloadAction<string>) => {
@@ -214,7 +213,7 @@ export const fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, an
     try {
       response = await fetch(`${searchEndpoint}?${queryString}`);
       const data = await response.json() as FetchFeaturesResposneType;
-      console.log('Features', response.status);
+      console.log('Features request: HTTP ', response.ok? response.status + '/OK' : 'error/'+ response.status);
       dispatch(mapSlice.actions.setFeatureCollection(data));
     }
     catch (error) {

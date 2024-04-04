@@ -8,18 +8,18 @@ const predefinedStyles = {
         'circle-radius': [
             'interpolate',
             ['linear'],
-            ['get', 'population'],
-            40000,
+            ['get', 'rc_temperature'],
+            0,
             4,
-            2000000,
-            14,
+            1,
+            8,
         ],
         'circle-fill-color': [
             'interpolate',
             ['linear'],
             ['get', 'rc_temperature'],     // Numeric property to base the color on
             0,                                  // Minimum value of the numeric property
-            'brown',                    // Dark color for minimum value
+            'navy',                    // Dark color for minimum value
             1,                              // Maximum value of the numeric property
             'cyan'                    // Light color for maximum value
         ],
@@ -28,10 +28,10 @@ const predefinedStyles = {
         'circle-opacity': [
             'interpolate',
             ['linear'],
-            ['get', 'population'],
-            40000,
+            ['get', 'mag_z'],
+            0,
             0.6,
-            2000000,
+            1,
             0.92,
         ],
     },

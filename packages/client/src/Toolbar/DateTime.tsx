@@ -1,84 +1,85 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Dispatch, SetStateAction } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { get } from 'react-intl-universal';
 
 import config from '@hessdalen-sensor-map/config/src';
 import { fetchFeatures, setFromDate, setToDate } from '../redux/mapSlice';
+import { setIsAnimating } from '../redux/guiSlice';
 import { RootState } from '../redux/store';
 
 import './DateTime.css';
+import { MapDictionaryType } from '@hessdalen-sensor-map/common-types';
 
 const ANIMATION_SPEED = 3000;
 
+const createAnimationFrame = (
+    intervalId: NodeJS.Timeout | undefined,
+    localTime: number,
+    handleSliderChange: (value: number) => void,
+    setLocalTime: Dispatch<SetStateAction<any>>,
+    requestFetchFeatures: Dispatch<any>,
+    dictionary: MapDictionaryType,
+    dispatch: any,
+) => {
+    clearTimeout(intervalId);
+    const nextLocalTime = localTime + Number(config.gui.time_window_ms);
+    if (nextLocalTime <= Number(dictionary.datetime?.max ?? 0)) {
+        console.debug(`GO! nextLocalTime < ${Number(dictionary.datetime?.max ?? 0)}`);
+        handleSliderChange(nextLocalTime);
+        requestFetchFeatures();
+        setLocalTime(nextLocalTime);
+    } else {
+        console.debug(`Stop! nextLocalTime > ${Number(dictionary.datetime?.max ?? 0)}`);
+        dispatch(setIsAnimating(false)); // Dispatch action to stop animation
+    }
+
+    intervalId = setTimeout(() => {
+        createAnimationFrame(intervalId, localTime, handleSliderChange, requestFetchFeatures, setLocalTime, dictionary, dispatch);
+    }, ANIMATION_SPEED);
+
+    return intervalId;
+};
+
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
-    const { dictionary } = useSelector((state: RootState) => state.map);
-    const { from_date } = useSelector((state: RootState) => state.map);
+    const { dictionary, from_date } = useSelector((state: RootState) => state.map);
     const initialDate = dictionary?.datetime?.min ? Number(dictionary.datetime.min) : from_date;
-    const [localDate, setLocalDate] = useState<number>(initialDate);
+    const { isAnimating } = useSelector((state: RootState) => state.gui);
+    const [localTime, setLocalTime] = useState<number>(initialDate);
     const [localMin, setLocalMin] = useState<number>(0);
     const [localMax, setLocalMax] = useState<number>(0);
-    const [isAnimating, setIsAnimating] = useState<boolean>(false);
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
-    // eslint-disable-next-line prefer-const
-    let debounceTimer = 0;
 
     const requestFetchFeatures = useCallback(() => {
-        const preDebouncer = debounceTimer;
-        debounceTimer + new Date().getTime();
-        if (preDebouncer > 0 && (preDebouncer - debounceTimer < 1000)) {
-            return;
-        }
+        dispatch(setFromDate(localTime - Number(config.gui.time_window_ms)));
+        dispatch(setToDate(localTime + Number(config.gui.time_window_ms)));
 
-        dispatch(setFromDate(localDate - Number(config.gui.time_window_ms)));
-        dispatch(setToDate(localDate + Number(config.gui.time_window_ms)));
-
-        console.debug({ action: 'submit', localDate, debug_timestamp: new Date().getTime() });
+        console.debug({ action: 'submit', localDate: localTime, debug_timestamp: new Date().getTime() });
         dispatch(fetchFeatures());
-    }, [dispatch, localDate, debounceTimer]);
+    }, [dispatch, localTime]);
 
-    const debouncedFetchFeatures = requestFetchFeatures;
-
-    const handleSliderChange = (value: number) => setLocalDate(Number(value));
-
-    const toggleAnimation = () => setIsAnimating(prev => !prev);
+    const handleSliderChange = (value: number) => {
+        return value > 0 ? setLocalTime(Number(value)) : 0;
+    }
 
     useEffect(() => {
         if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
             setGotTheFirstDictionary(true);
             setLocalMin(Number(dictionary.datetime.min));
             setLocalMax(Number(dictionary.datetime.max));
-            setLocalDate(Number(dictionary.datetime.min));
+            setLocalTime(Number(dictionary.datetime.min));
         }
     }, [dictionary, gotTheFirstDictionary]);
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout | undefined;
-
+        if (!dictionary) {
+            return;
+        }
         if (isAnimating) {
             console.info('animation toggled to start');
-            intervalId = setInterval(() => {
-                setLocalDate((prevLocalDate) => {
-                    // console.debug(`dictionary min = ${dictionary?.datetime.min}`);
-                    // console.debug(`dictionary max = ${dictionary?.datetime.max}`);
-                    // console.debug(`prevLocalDate = ${prevLocalDate}`);
-                    const nextLocalTime = prevLocalDate + Number(config.gui.time_window_ms);
-                    // console.debug(`nextLocalTime = ${nextLocalTime} = ${prevLocalDate} + ${Number(config.gui.time_window_ms)}`);
-                    if (nextLocalTime <= Number(dictionary?.datetime?.max ?? 0)) {
-                        console.debug(`GO! nextLocalTime < ${Number(dictionary?.datetime?.max ?? 0)}`);
-                        handleSliderChange(nextLocalTime);
-                        requestFetchFeatures();
-                        return nextLocalTime;
-                    } else {
-                        console.debug(`Stop! nextLocalTime > ${Number(dictionary?.datetime?.max ?? 0)}`);
-                        setIsAnimating(false);
-                        return prevLocalDate;
-                    }
-                });
-            }, ANIMATION_SPEED);
-        }
-        else if (intervalId) {
+            intervalId = createAnimationFrame(intervalId, localTime, handleSliderChange, requestFetchFeatures, setLocalTime, dictionary, dispatch);
+        } else if (intervalId) {
             console.info(`animation - toggled to stop`);
             clearInterval(intervalId);
         }
@@ -86,7 +87,9 @@ const DateTime: React.FC = () => {
         return () => {
             clearInterval(intervalId);
         };
-    }, [dictionary?.datetime?.max, isAnimating, localMax, requestFetchFeatures]);
+    }, [dictionary?.datetime?.max, isAnimating, localMax, requestFetchFeatures, dispatch, localTime, dictionary]);
+
+    const toggleAnimation = () => dispatch(setIsAnimating(!isAnimating));
 
     return (
         <nav id='datetime-selector' className='component highlightable'>
@@ -98,9 +101,9 @@ const DateTime: React.FC = () => {
                 name='datetime'
                 min={localMin}
                 max={localMax}
-                value={localDate}
+                value={localTime}
                 onInput={(e) => handleSliderChange(parseInt(e.currentTarget.value))}
-                onMouseUp={debouncedFetchFeatures}
+                onMouseUp={requestFetchFeatures}
             />
             <span className={'submit ' + (isAnimating ? 'stop' : 'start')} onClick={toggleAnimation} title={get('datetime.animate')} aria-label={get('datetime.animate')}></span>
         </nav>
