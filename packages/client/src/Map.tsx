@@ -51,7 +51,7 @@ function clickMap(e: MapBrowserEvent<any>, map: Map, dispatch: Dispatch<UnknownA
         dispatch(setSelectionId(undefined));
         map.getView().animate({
           center: e.coordinate,
-          zoom: Number(config.zoomLevelForPoints || 1),
+          zoom: Number(config.gui.map.zoomLevelForPoints || 1),
           duration: 500,
           easing: easeOut
         });

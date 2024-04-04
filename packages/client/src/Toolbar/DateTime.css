@@ -14,28 +14,14 @@
         font-family: 'Courier New', Courier, monospace;
     }
 
-    input::-webkit-slider-thumb {
-        transition: none !important;
-    }
-
-    input::-webkit-slider-runnable-track {
-        transition: none !important;
-    }
-
-    input::-moz-range-thumb {
-        transition: none !important;
-    }
-
-    input::-moz-range-track {
-        transition: none !important;
-    }
-
     .submit {
         font-size: small;
         padding: 0;
         border: 0;
         margin: 0;
         cursor: pointer;
+        min-width: 1em;
+        max-width: 1em;
     }
 
     .submit.start::after {

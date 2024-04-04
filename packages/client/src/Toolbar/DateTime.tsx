@@ -3,38 +3,24 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { get } from 'react-intl-universal';
 
+import config from '@hessdalen-sensor-map/config/src';
 import { fetchFeatures, setFromDate, setToDate } from '../redux/mapSlice';
 import { RootState } from '../redux/store';
 
 import './DateTime.css';
-import config from '@hessdalen-sensor-map/config/src';
 
-const ANIMATION_SPEED = 1000;
+const ANIMATION_SPEED = 3000;
 
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
     const { dictionary } = useSelector((state: RootState) => state.map);
     const { from_date } = useSelector((state: RootState) => state.map);
-
-    const initialDate = dictionary?.datetime?.min
-        ? Number(dictionary.datetime.min)
-        : from_date;
-
+    const initialDate = dictionary?.datetime?.min ? Number(dictionary.datetime.min) : from_date;
     const [localDate, setLocalDate] = useState<number>(initialDate);
     const [localMin, setLocalMin] = useState<number>(0);
     const [localMax, setLocalMax] = useState<number>(0);
     const [isAnimating, setIsAnimating] = useState<boolean>(false);
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
-
-    useEffect(() => {
-        if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
-            setGotTheFirstDictionary(true);
-            setLocalMin(Number(dictionary.datetime.min));
-            setLocalMax(Number(dictionary.datetime.max));
-            setLocalDate(Number(dictionary.datetime.min));
-        }
-    }, [dictionary, gotTheFirstDictionary]);
-
     // eslint-disable-next-line prefer-const
     let debounceTimer = 0;
 
@@ -45,13 +31,10 @@ const DateTime: React.FC = () => {
             return;
         }
 
+        dispatch(setFromDate(localDate - Number(config.gui.time_window_ms)));
+        dispatch(setToDate(localDate + Number(config.gui.time_window_ms)));
+
         console.debug({ action: 'submit', localDate, debug_timestamp: new Date().getTime() });
-        dispatch(setFromDate(
-            localDate - Number(config.gui.time_window_ms)
-        ));
-        dispatch(setToDate(
-            localDate + Number(config.gui.time_window_ms)
-        ));
         dispatch(fetchFeatures());
     }, [dispatch, localDate, debounceTimer]);
 
@@ -62,16 +45,33 @@ const DateTime: React.FC = () => {
     const toggleAnimation = () => setIsAnimating(prev => !prev);
 
     useEffect(() => {
+        if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
+            setGotTheFirstDictionary(true);
+            setLocalMin(Number(dictionary.datetime.min));
+            setLocalMax(Number(dictionary.datetime.max));
+            setLocalDate(Number(dictionary.datetime.min));
+        }
+    }, [dictionary, gotTheFirstDictionary]);
+
+    useEffect(() => {
         let intervalId: NodeJS.Timeout | undefined;
 
         if (isAnimating) {
+            console.info('animation toggled to start');
             intervalId = setInterval(() => {
-                setLocalDate(prevLocalDate => {
-                    const newLocalDate = prevLocalDate + config.gui.time_window_ms;
-                    if (newLocalDate <= localMax) {
+                setLocalDate((prevLocalDate) => {
+                    // console.debug(`dictionary min = ${dictionary?.datetime.min}`);
+                    // console.debug(`dictionary max = ${dictionary?.datetime.max}`);
+                    // console.debug(`prevLocalDate = ${prevLocalDate}`);
+                    const nextLocalTime = prevLocalDate + Number(config.gui.time_window_ms);
+                    // console.debug(`nextLocalTime = ${nextLocalTime} = ${prevLocalDate} + ${Number(config.gui.time_window_ms)}`);
+                    if (nextLocalTime <= Number(dictionary?.datetime?.max ?? 0)) {
+                        console.debug(`GO! nextLocalTime < ${Number(dictionary?.datetime?.max ?? 0)}`);
+                        handleSliderChange(nextLocalTime);
                         requestFetchFeatures();
-                        return newLocalDate;
+                        return nextLocalTime;
                     } else {
+                        console.debug(`Stop! nextLocalTime > ${Number(dictionary?.datetime?.max ?? 0)}`);
                         setIsAnimating(false);
                         return prevLocalDate;
                     }
@@ -79,13 +79,14 @@ const DateTime: React.FC = () => {
             }, ANIMATION_SPEED);
         }
         else if (intervalId) {
+            console.info(`animation - toggled to stop`);
             clearInterval(intervalId);
         }
 
         return () => {
             clearInterval(intervalId);
         };
-    }, [isAnimating, localMax, requestFetchFeatures]);
+    }, [dictionary?.datetime?.max, isAnimating, localMax, requestFetchFeatures]);
 
     return (
         <nav id='datetime-selector' className='component highlightable'>

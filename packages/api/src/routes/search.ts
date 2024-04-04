@@ -137,6 +137,7 @@ async function getCleanArgs(ctx) {
         const from_date_obj = new Date(rows[0].min);
         userArgs.from_date = from_date_obj.toISOString();
         userArgs.to_date = new Date(from_date_obj.getTime() + + Number(config.gui.time_window_ms)).toISOString();
+        console.log({action: 'getCleanArgs', rows, from_date_obj, from_date: userArgs.from_date, to_date: userArgs.to_date})
     }
 
     else {
