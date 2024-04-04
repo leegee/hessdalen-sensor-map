@@ -18,7 +18,7 @@
   --ufo-modal-bg: #141414;
   --ufo-modal-border-clr: rgba(255, 255, 255, 0.25);
 
-  --ufo-div-padding: 0.75rem;
+  --ufo-div-padding: 0.6rem;
   --ufo-toolbar-height: 3rem;
   --ufo-panel-narrow-width: 40vw;
   --ufo-panel-SMALL-SCREEN-height: 30vh;
@@ -105,8 +105,9 @@ mark {
 .component {
   border: 1pt solid var(--ufo-primary-border-clr);
   border-radius: 4pt;
-  padding: 0 3pt;
-  margin-left: 1rem;
+  padding: 0 var(--ufo-div-padding);
+  margin: 0;
+  margin-left: var(--ufo-div-padding);
 }
 
 .component:focus-within,

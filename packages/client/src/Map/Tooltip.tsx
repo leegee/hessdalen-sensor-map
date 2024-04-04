@@ -3,7 +3,7 @@ import { get } from 'react-intl-universal';
 import type { Map } from 'ol';
 import { MapBrowserEvent } from 'ol';
 import { FeatureLike } from 'ol/Feature';
-import Overlay from 'ol/Overlay';
+import Overlay, { Positioning } from 'ol/Overlay';
 import config from '@hessdalen-sensor-map/config/src';
 import { FEATURE_IS_HIGHLIGHT_PROP } from './VectorLayerHighlight';
 
@@ -48,21 +48,40 @@ const Tooltip: React.FC<TooltipComponentProps> = ({ map }) => {
         else {
             const props = feature.getProperties();
             let tooltipContent = `
+            <h4>
+            ${props.logger_id}
             <small>
                 ${new Intl.DateTimeFormat(config.locale).format(new Date(feature.get('timestamp') as string))}
             </small>
-            <h4>${props.logger_id}</h4>
+            </h4>
             <table><tbody>`;
 
-            for (const prop in props) {
+            for (const prop of Object.keys(props).filter(
+                _ => !_.includes('geometry')
+            )) {
                 tooltipContent += `<tr><th>${prop}</th><td>${props[prop]}</td></tr>`;
             }
 
             tooltipContent += '</tbody></table>';
 
             if (tooltipContent && tooltipElementRef.current !== null) {
-                tooltipElementRef.current.innerHTML = tooltipContent;
-                overlay.setPosition(event.coordinate);
+                const mapSize = map.getSize();
+                if (mapSize) {
+                    const viewportWidth = mapSize[0];
+                    const viewportHeight = mapSize[1];
+                    tooltipElementRef.current.innerHTML = tooltipContent;
+                    const cursorX = event.pixel[0];
+                    const cursorY = event.pixel[1];
+                    const positioningY = cursorY < viewportHeight / 3 ? 'top' : 'bottom';
+                    const positioningX = cursorX < viewportWidth / 3 ? 'right' : 'left';
+                    const positioning = positioningY + '-' + positioningX as Positioning;
+                    console.log(positioning)
+                    overlay.setPosition(event.coordinate);
+                    // overlay.setPositioning('bottom-right');  
+                    overlay.setPositioning(positioning);
+                } else {
+                    overlay.setPosition(event.coordinate);
+                }
             } else {
                 overlay.setPosition(undefined);
             }

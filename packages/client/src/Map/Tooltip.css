@@ -1,9 +1,39 @@
 .tooltip {
     /* position: absolute; */
     background-color: rgba(0, 0, 0, 0.8);
-    padding: 5pt;
     border-radius: 2pt;
     box-shadow: 0 2pt 4pt rgba(0, 0, 0, 0.1);
     font-size: 12pt;
     color: #eee;
+    z-index: 10;
+    border: 1pt solid var(--ufo-primary-border-clr);
+
+
+    h4 {
+        display: flex;
+        font-size: small;
+        background: var(--ufo-primary-border-clr);
+        border-color: var(--ufo-primary-fg);
+        width: 100%;
+        justify-content: space-between;
+        align-items: stretch;
+        padding: 5pt;
+        margin: 0;
+    }
+
+    table {
+        padding: 5pt;
+
+        th,
+        tdh {
+            padding: 0.3em;
+        }
+
+        th {
+            text-align: right;
+            padding-right: 0.6em;
+            text-transform: capitalize;
+        }
+    }
+
 }

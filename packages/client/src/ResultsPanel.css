@@ -11,6 +11,7 @@
     width: var(--ufo-panel-narrow-width);
     top: var(--ufo-toolbar-height);
     left: 0;
+    padding-left: calc(var(--ufo-div-padding) * 1.8);
     bottom: unset;
     right: unset;
     height: 100%;
