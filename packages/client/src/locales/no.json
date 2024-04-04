@@ -3,12 +3,13 @@
     "close": "Lukke",
     "from": "fra",
     "to": "til",
+    "status": {
+        "points_count": "{count} punkter",
+        "no_results": "Ingen for"
+    },
     "panel": {
         "points_count": "{count} punkter",
         "no_results": "Det er ingen data for denne visningen av kartet. Prøver å panorere eller zoome ut."
-    },
-    "status": {
-        "points_count": "{count} punkter"
     },
     "sighting_details": {
         "title": "Rapport"
