@@ -29,15 +29,7 @@ export async function search(ctx: Context) {
         results: undefined,
     };
 
-    const userArgs: UserArgsType | null = await getCleanArgs(ctx);
-
-    if (!userArgs) {
-        throw new CustomError({
-            action: 'query',
-            msg: 'Missing request parameters',
-            details: userArgs
-        })
-    }
+    const userArgs: UserArgsType = await getCleanArgs(ctx);
 
     let forErrorReporting = {};
     const acceptHeader = ctx.headers.accept || '';
@@ -107,7 +99,10 @@ async function sendCsvResponse(ctx: Context, sql: string, sqlBits: SqlBitsType) 
     bodyStream.end();
 }
 
-async function getCleanArgs(ctx) {
+/** 
+ * @throws if the args are unacceptable 
+ **/
+async function getCleanArgs(ctx: Context) {
     const args: ParsedUrlQuery = ctx.request.query;
     const userArgs: UserArgsType = {
         zoom: parseInt(args.zoom as string),
@@ -120,9 +115,6 @@ async function getCleanArgs(ctx) {
         timestamp_min: 0,
         timestamp_max: 0,
     };
-
-    console.log('...............from_date in:', Number(userArgs.from_date));
-
 
     const [spatialWhereClause, spatialwhereParamsStack] = getSpatialWhereBits(userArgs, []);
     const sql = `SELECT MIN(sensordata.timestamp) AS min, MAX(sensordata.timestamp) AS max 
@@ -141,25 +133,29 @@ async function getCleanArgs(ctx) {
 
     if (!userArgs.from_date || Number(userArgs.from_date) < 0) {
         userArgs.from_date = Number(userArgs.timestamp_min);
-        userArgs.to_date = Number(userArgs.timestamp_max);
+        userArgs.to_date = Number(userArgs.timestamp_min) + Number(config.gui.time_window_ms);
     }
 
-    console.log('...............b', userArgs.from_date);
-
     if (userArgs.from_date && Number(userArgs.from_date) > 1) {
-                userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
-        console.log('...............x', userArgs.from_date);
+        userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
         if (userArgs.to_date && Number(userArgs.to_date) > 1) {
             userArgs.to_date = new Date(Number(userArgs.to_date)).toISOString();
         }
     }
 
+    if (userArgs.minlat === undefined || userArgs.minlng === undefined
+        || userArgs.maxlat === undefined || userArgs.maxlng === undefined
+    ) {
+        throw new CustomError({
+            action: 'query',
+            msg: 'Missing request parameters',
+            details: userArgs
+        })
+    }
 
-    return (
-        userArgs !== null &&
-        userArgs.minlat !== undefined && userArgs.minlng !== undefined &&
-        userArgs.maxlat !== undefined && userArgs.maxlng !== undefined
-    ) ? userArgs : null;
+    console.debug({action: 'getCleanArgs done', userArgs})
+
+    return userArgs;
 }
 
 /**
@@ -192,23 +188,20 @@ async function constructSqlBits(ctx: Context, userArgs: UserArgsType): Promise<S
     whereColumns.push(spatialWhereColumns);
     whereParamsStack.push( ...spatialwhereParamsStack);
 
+    const from_date_str = `${userArgs.from_date}`;
+    const to_date_str = `${userArgs.to_date}`;
+
     if (userArgs.from_date !== undefined && userArgs.to_date !== undefined) {
         whereColumns.push( `(timestamp BETWEEN $${whereParamsStack.length + 1} AND $${whereParamsStack.length + 2})` );
-        whereParamsStack.push(
-            userArgs.from_date.toString(),
-            userArgs.to_date.toString()
-        );
-        orderByClause.push('timestamp ' + userArgs.sort_order);
+        whereParamsStack.push( from_date_str, to_date_str );
     }
     else if (userArgs.from_date !== undefined) {
         whereColumns.push(`(timestamp >= $${whereParamsStack.length + 1})`);
-        whereParamsStack.push(userArgs.from_date.toString());
-        orderByClause.push('timestamp ' + userArgs.sort_order);
+        whereParamsStack.push(from_date_str);
     }
     else if (userArgs.to_date !== undefined) {
         whereColumns.push(`(timestamp <= $${whereParamsStack.length + 1})`);
-        whereParamsStack.push(userArgs.to_date.toString());
-        orderByClause.push('timestamp ' + userArgs.sort_order);
+        whereParamsStack.push(to_date_str);
     }
 
     const rv: SqlBitsType = {
