@@ -36,14 +36,14 @@ function generateLocationCsv ( locations, filePath ) {
 
 function generateSensorData ( loggerIds ) {
     let data = [];
-    let startDate = new Date( '2222-02-02T00:00:00Z' );
+    let startTime = new Date( '2222-02-02T00:00:00Z' ).getTime();
     let totalIntervals = 7 * 24 * 6; // 7 days * 24 hours * 6 intervals per hour
     let interval = 10 * 60 * 1000; // 10 minutes in milliseconds
 
     for ( const loggerId of loggerIds ) {
-        console.log( 'Logger ID', loggerId );
+        let records_made = 0;
         for ( let i = 0; i < totalIntervals; i++ ) {
-            let timestamp = new Date( startDate.getTime() - i * interval ); // Subtract i intervals from the current date
+            let timestamp = new Date( startTime + ( i * interval ) );
             let row = {
                 logger_id: loggerId,
                 hw_version: Math.floor( Math.random() * 100 ),
@@ -56,7 +56,9 @@ function generateSensorData ( loggerIds ) {
                 mag_z: Math.random().toFixed( 2 )
             };
             data.push( row );
+            records_made++;
         }
+        console.log( 'Logger ID', loggerId, 'made', records_made );;
     }
     return data;
 }
