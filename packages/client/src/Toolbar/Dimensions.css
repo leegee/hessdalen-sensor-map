@@ -1,0 +1,41 @@
+/* Dimensions.css */
+
+#dimension-selector {
+    position: relative;
+}
+
+#dimension-selector {
+    select {
+        z-index: 1110;
+        position: absolute;
+        background-color: var(--ufo-primary-border-clr);
+        border-color: var(--ufo-brand-clr-fg);
+        top: 2em;
+        margin-left: calc(-1 * 50%);
+        overflow: hidden;
+    }
+
+    option {
+        background: var(--ufo-brand-clr);
+        background-color: var(--ufo-brand-clr-fg);
+        padding: 0.3em;
+    }
+
+    option:checked {
+        background-color: var(--ufo-brand-clr);
+        color: var(--ufo-brand-clr-fg);
+    }
+
+    option:not(checked)::before {
+        content: '✗';
+        width: 1em;
+        margin-right: 0.3em;
+    }
+
+    option:checked::before {
+        content: '✓';
+        width: 1em;
+        margin-right: 0.3em;
+    }
+
+}

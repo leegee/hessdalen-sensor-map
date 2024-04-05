@@ -36,6 +36,8 @@ export interface FetchFeaturesResposneType {
   dictionary?: MapDictionaryType;
 }
 
+export type selectedDimensionsType = Record<string, boolean>;
+
 // Extend QueryParams 
 export interface MapState {
   center: [number, number];
@@ -51,6 +53,7 @@ export interface MapState {
   requestingCsv: boolean;
   runningFeaturesRequest: boolean;
   source: FeatureSourceAttributeType;
+  selectedDimensions: selectedDimensionsType; 
 }
 
 const searchEndpoint = config.api.host + ':' + config.api.port + config.api.endopoints.search;
@@ -69,6 +72,7 @@ const initialState: MapState = {
   requestingCsv: false,
   runningFeaturesRequest: false,
   source: 'not-specified',
+  selectedDimensions: [],
 };
 
 const mapSlice = createSlice({
@@ -129,6 +133,9 @@ const mapSlice = createSlice({
     csvRequestFailed: (state) => {
       state.requestingCsv = false;
     },
+    setSelectedDimensions: (state, action: PayloadAction<selectedDimensionsType>) => {
+      state.selectedDimensions = { ...action.payload };
+    },
   },
 });
 
@@ -136,6 +143,7 @@ export const {
   setPreviousQueryString, setMapParams,
   resetDates, setFromDate, setToDate,
   setQ, setBasemapSource, setSource,
+  setSelectedDimensions,
 } = mapSlice.actions;
 
 export const selectBasemapSource = (state: RootState) => state.map.basemapSource as MapBaseLayerKeyType;
