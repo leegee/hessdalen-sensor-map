@@ -12,34 +12,6 @@ import { MapDictionaryType } from '@hessdalen-sensor-map/common-types';
 
 const ANIMATION_SPEED = 3000;
 
-const createAnimationFrame = (
-    intervalId: NodeJS.Timeout | undefined,
-    localTime: number,
-    handleSliderChange: (value: number) => void,
-    setLocalTime: Dispatch<SetStateAction<any>>,
-    requestFetchFeatures: Dispatch<any>,
-    dictionary: MapDictionaryType,
-    dispatch: any,
-) => {
-    clearTimeout(intervalId);
-    const nextLocalTime = localTime + Number(config.gui.time_window_ms);
-    if (nextLocalTime <= Number(dictionary.datetime?.max ?? 0)) {
-        console.debug(`GO! nextLocalTime < ${Number(dictionary.datetime?.max ?? 0)}`);
-        handleSliderChange(nextLocalTime);
-        requestFetchFeatures();
-        setLocalTime(nextLocalTime);
-    } else {
-        console.debug(`Stop! nextLocalTime > ${Number(dictionary.datetime?.max ?? 0)}`);
-        dispatch(setIsAnimating(false)); // Dispatch action to stop animation
-    }
-
-    intervalId = setTimeout(() => {
-        createAnimationFrame(intervalId, localTime, handleSliderChange, requestFetchFeatures, setLocalTime, dictionary, dispatch);
-    }, ANIMATION_SPEED);
-
-    return intervalId;
-};
-
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
     const { dictionary, from_date } = useSelector((state: RootState) => state.map);
@@ -50,17 +22,38 @@ const DateTime: React.FC = () => {
     const [localMax, setLocalMax] = useState<number>(0);
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
 
+    const createAnimationFrame = (intervalId: NodeJS.Timeout | undefined): NodeJS.Timeout | undefined => {
+        clearTimeout(intervalId);
+        const nextLocalTime = Number(localTime) + 10000;  // Number(config.gui.time_window_ms);
+
+        if (nextLocalTime <= Number(localMax)) {
+            console.debug(`GO! nextLocalTime < ${Number(localMax)}, updating localTime `);
+            handleSliderChange(nextLocalTime);
+        } else {
+            console.debug(`Stop! nextLocalTime > Number(${localMax}) (dict max=${Number(dictionary?.datetime?.max ?? 0)} `);
+            dispatch(setIsAnimating(false)); // Dispatch action to stop animation
+        }
+
+        return intervalId;
+    };
+
     const requestFetchFeatures = useCallback(() => {
         dispatch(setFromDate(localTime - Number(config.gui.time_window_ms)));
         dispatch(setToDate(localTime + Number(config.gui.time_window_ms)));
 
-        console.debug({ action: 'submit', localDate: localTime, debug_timestamp: new Date().getTime() });
+        console.debug({ action: 'submit', localTime, debug_timestamp: new Date().getTime() });
         dispatch(fetchFeatures());
     }, [dispatch, localTime]);
 
     const handleSliderChange = (value: number) => {
+        console.log('slider changed, local time = ', value);
         return value > 0 ? setLocalTime(Number(value)) : 0;
     }
+
+    useEffect(
+        () => requestFetchFeatures(),
+        [localTime, requestFetchFeatures]
+    );
 
     useEffect(() => {
         if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
@@ -78,7 +71,8 @@ const DateTime: React.FC = () => {
         }
         if (isAnimating) {
             console.info('animation toggled to start');
-            intervalId = createAnimationFrame(intervalId, localTime, handleSliderChange, requestFetchFeatures, setLocalTime, dictionary, dispatch);
+            intervalId = createAnimationFrame(intervalId);
+            intervalId = setTimeout(() => createAnimationFrame(intervalId), ANIMATION_SPEED);
         } else if (intervalId) {
             console.info(`animation - toggled to stop`);
             clearInterval(intervalId);
@@ -87,14 +81,14 @@ const DateTime: React.FC = () => {
         return () => {
             clearInterval(intervalId);
         };
-    }, [dictionary?.datetime?.max, isAnimating, localMax, requestFetchFeatures, dispatch, localTime, dictionary]);
+    }, [localMax, isAnimating]);
 
     const toggleAnimation = () => dispatch(setIsAnimating(!isAnimating));
 
     return (
         <nav id='datetime-selector' className='component highlightable'>
             <input
-                title={get('datetime.title')}
+                title={get('datetime.title') + ' ' + new Date(localTime).toLocaleString()}
                 aria-label={get('datetime.title')}
                 type='range'
                 id='datetime'

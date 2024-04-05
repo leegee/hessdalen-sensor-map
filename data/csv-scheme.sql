@@ -12,7 +12,7 @@ CREATE TABLE sensordata (
     hw_version INT,
     sw_version INT,
     measurement_number INT,
-    timestamp TIMESTAMP,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     rc_temperature FLOAT,
     mag_x FLOAT,
     mag_y FLOAT,

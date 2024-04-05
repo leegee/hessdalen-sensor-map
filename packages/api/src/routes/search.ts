@@ -55,15 +55,16 @@ export async function search(ctx: Context) {
         else {
             const { rows } = await ctx.dbh.query(sql, sqlBits.whereParamsStack ? sqlBits.whereParamsStack : undefined);
             if (!rows[0] || !rows[0].jsonb_build_object
-                || rows[0].jsonb_build_object.features === null && config.api.debug
+                || rows[0].jsonb_build_object.features === null
             ) {
                 console.warn({ action: 'query', msg: 'Found no features', forErrorReporting });
             } else {
-                console.log({ action: 'query', msg: `Found ${rows.length} features` });
+                console.log({ action: 'query', msg: `Found ${rows[0].jsonb_build_object.features.length} features` });
             }
             body.results = rows[0].jsonb_build_object as FeatureCollection;
             body.dictionary = await getDictionary(body.results);
             ctx.body = JSON.stringify(body);
+            console.log(body.dictionary.datetime)
         }
     }
     catch (e) {
@@ -108,39 +109,47 @@ async function getCleanArgs(ctx) {
         minlat: parseFloat(args.minlat as string),
         maxlng: parseFloat(args.maxlng as string),
         maxlat: parseFloat(args.maxlat as string),
-
         to_date: args.to_date ? (Array.isArray(args.to_date) ? args.to_date[0] : args.to_date) : undefined,
         from_date: args.from_date ? (Array.isArray(args.from_date) ? args.from_date[0] : args.from_date) : undefined,
-
-        // Potentially the subject of a text search:
-        q: args.q ? String(args.q).trim() : undefined,
-
-        // Potentially the subject of the text search: undefined = search all cols defined in config.api.searchableTextColumnNames
-        // Not yet implemented.
-        q_subject: args.q_subject && [config.api.searchableTextColumnNames].includes(
-            args.q_subject instanceof Array ? args.q_subject : [args.q_subject]
-        ) ? String(args.q_subject) : undefined,
-
-        sort_order: String(args.sort_order) === 'ASC' || String(args.sort_order) === 'DESC' ? String(args.sort_order) as 'ASC' | 'DESC' : undefined,
-
-        ... (
-            isFeatureSourceAttributeType(args.source)
-                ? { source: args.source as FeatureSourceAttributeType }
-                : {}
-        )
     };
 
-    if (!userArgs.sort_order) {
-        userArgs.sort_order = 'DESC';
-    }
-    if (userArgs.from_date) {
-        userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
-    }
-    if (userArgs.to_date) {
-        userArgs.to_date = new Date(Number(userArgs.to_date)).toISOString();
+    console.log('...............from_date in:', Number(userArgs.from_date));
+
+    if (!userArgs.from_date || Number(userArgs.from_date) < 0) {
+        const [spatialWhereClause, spatialwhereParamsStack] = getSpatialWhereBits(userArgs, []);
+        const sql = `SELECT MIN(sensordata.timestamp) FROM sensordata
+            JOIN loggers ON sensordata.logger_id = loggers.logger_id
+            WHERE ${spatialWhereClause}
+        `;
+        try {
+            const { rows } = await ctx.dbh.query(sql, spatialwhereParamsStack);
+            userArgs.from_date = new Date(rows[0].min).getTime();
+            userArgs.to_date = userArgs.from_date + Number(config.gui.time_window_ms) ;
+            console.log({
+                action: 'getCleanArgs default from_date', rows,
+                from_date: userArgs.from_date,
+                to_date: userArgs.to_date,
+                from_Date: new Date(userArgs.from_date).toISOString(),
+                to_Date: new Date(userArgs.to_date).toISOString(),
+                sql,
+                spatialWhereClause
+            })
+        } catch (error) {
+            console.error({action: 'getCleanArgs default from_date', sql, spatialwhereParamsStack });
+            throw error;
+        }
     }
 
-    console.log('................',userArgs.from_date);
+    console.log('...............b', userArgs.from_date);
+
+    if (userArgs.from_date && Number(userArgs.from_date) > 1) {
+                userArgs.from_date = new Date(Number(userArgs.from_date)).toISOString();
+        console.log('...............x', userArgs.from_date);
+        if (userArgs.to_date && Number(userArgs.to_date) > 1) {
+            userArgs.to_date = new Date(Number(userArgs.to_date)).toISOString();
+        }
+    }
+
 
     return (
         userArgs !== null &&
@@ -179,26 +188,6 @@ async function constructSqlBits(ctx: Context, userArgs: QueryParams): Promise<Sq
     whereColumns.push(spatialWhereColumns);
     whereParamsStack.push( ...spatialwhereParamsStack);
 
-    if (!userArgs.from_date || !userArgs.to_date) {
-        const [spatialWhereClause, spatialwhereParamsStack] = getSpatialWhereBits(userArgs, []);
-        const sql = `SELECT MIN(sensordata.timestamp) 
-            FROM sensordata 
-            JOIN loggers ON sensordata.logger_id = loggers.logger_id
-            WHERE ${spatialWhereClause}
-        `;
-        try {
-            const { rows } = await ctx.dbh.query(sql, spatialwhereParamsStack);
-            userArgs.from_date = new Date(rows[0].min);
-            userArgs.to_date = new Date(
-                userArgs.from_date.getTime() + Number(config.gui.time_window_ms)
-            );
-            console.log({ action: 'getCleanArgs default from_date', rows, from_date: userArgs.from_date, to_date: userArgs.to_date })
-        } catch (error) {
-            console.error({action: 'getCleanArgs default from_date', sql, spatialwhereParamsStack });
-            throw error;
-        }
-    }
-
     if (userArgs.from_date !== undefined && userArgs.to_date !== undefined) {
         whereColumns.push( `(timestamp BETWEEN $${whereParamsStack.length + 1} AND $${whereParamsStack.length + 2})` );
         whereParamsStack.push(
@@ -234,7 +223,6 @@ function innserSelect(sqlBits: SqlBitsType) {
     FROM sensordata
     JOIN loggers ON sensordata.logger_id = loggers.logger_id
     WHERE ${sqlBits.whereColumns.join(' AND ')}
-         ${sqlBits.orderByClause ? ' ORDER BY ' + sqlBits.orderByClause.join(',') : ''}
     ) AS s`;
 }
 

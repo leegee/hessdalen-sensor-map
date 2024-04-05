@@ -74,7 +74,7 @@ const config: ConfigType = {
       zoomLevelForPoints: 8,
       zoomLevelForPointDetails: 11,
     },
-    time_window_ms: 12 * 60 * 1000, // 12 hours in milliseconds
+    time_window_ms: 1000 * 60 * 12, // 12 hours
   },
   minQLength: 3,
   flags: {

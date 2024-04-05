@@ -68,11 +68,13 @@ vectorLayer.set('name', 'points');
 vectorLayer.setVisible(true);
 
 export function updateVectorLayer(featureCollection: UfoFeatureCollection) {
+    window.document.body.style.cursor = 'wait';
     vectorSource.clear();
     if (featureCollection.features !== null) {
         vectorSource.addFeatures(new GeoJSON().readFeatures(featureCollection));
     }
     vectorSource.changed();
     console.debug("Number of features added:", vectorSource.getFeatures().length);
+    window.document.body.style.cursor = 'unset';
 }
 

@@ -17,8 +17,8 @@ export interface QueryParams {
   maxlng: number;
   maxlat: number;
   zoom: number;
-  to_date?: Date | string | undefined;
-  from_date?: Date | string | undefined;
+  to_date?: Date | string | number | undefined;
+  from_date?: Date | string | number| undefined;
   q?: string;
   q_subject?: string;
   sort_order?: 'ASC' | 'DESC';
