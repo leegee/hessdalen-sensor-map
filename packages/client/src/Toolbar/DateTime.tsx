@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, Dispatch, SetStateAction } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { get } from 'react-intl-universal';
 
@@ -8,7 +8,6 @@ import { setIsAnimating } from '../redux/guiSlice';
 import { RootState } from '../redux/store';
 
 import './DateTime.css';
-import { MapDictionaryType } from '@hessdalen-sensor-map/common-types';
 
 const ANIMATION_SPEED = 3000;
 
@@ -22,8 +21,7 @@ const DateTime: React.FC = () => {
     const [localMax, setLocalMax] = useState<number>(0);
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
 
-    const createAnimationFrame = (intervalId: NodeJS.Timeout | undefined): NodeJS.Timeout | undefined => {
-        clearTimeout(intervalId);
+    const createAnimationFrame = useCallback((intervalId: NodeJS.Timeout | undefined): NodeJS.Timeout | undefined => {
         const nextLocalTime = Number(localTime) + 10000;  // Number(config.gui.time_window_ms);
 
         if (nextLocalTime <= Number(localMax)) {
@@ -31,18 +29,18 @@ const DateTime: React.FC = () => {
             handleSliderChange(nextLocalTime);
         } else {
             console.debug(`Stop! nextLocalTime > Number(${localMax}) (dict max=${Number(dictionary?.datetime?.max ?? 0)} `);
-            dispatch(setIsAnimating(false)); // Dispatch action to stop animation
+            clearTimeout(intervalId);
+            dispatch(setIsAnimating(false));
         }
 
         return intervalId;
-    };
+    }, [localTime, localMax, dictionary?.datetime?.max, dispatch]);
 
     const requestFetchFeatures = useCallback(() => {
         dispatch(setFromDate(localTime - Number(config.gui.time_window_ms)));
         dispatch(setToDate(localTime + Number(config.gui.time_window_ms)));
-
-        console.debug({ action: 'submit', localTime, debug_timestamp: new Date().getTime() });
         dispatch(fetchFeatures());
+        console.debug({ action: 'submit', localTime, debug_timestamp: new Date().getTime() });
     }, [dispatch, localTime]);
 
     const handleSliderChange = (value: number) => {
@@ -51,22 +49,33 @@ const DateTime: React.FC = () => {
     }
 
     useEffect(
-        () => requestFetchFeatures(),
+        () => {
+            console.debug(`localTime changed ${localTime}, fetching features`);
+            return requestFetchFeatures();
+        },
         [localTime, requestFetchFeatures]
     );
 
     useEffect(() => {
-        if (dictionary?.datetime?.min && dictionary.datetime.max && !gotTheFirstDictionary) {
+        if (!gotTheFirstDictionary && (
+            dictionary?.datetime?.min && dictionary.datetime.max
+        )) {
             setGotTheFirstDictionary(true);
             setLocalMin(Number(dictionary.datetime.min));
             setLocalMax(Number(dictionary.datetime.max));
             setLocalTime(Number(dictionary.datetime.min));
+            console.debug({
+                action: 'Got the first dictionary',
+                localMin: new Date(dictionary.datetime.min).toLocaleString(),
+                localMax: new Date(dictionary.datetime.max).toLocaleString(),
+                localTime: new Date(dictionary.datetime.min).toLocaleString(),
+            });
         }
     }, [dictionary, gotTheFirstDictionary]);
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout | undefined;
-        if (!dictionary) {
+        if (!gotTheFirstDictionary) {
             return;
         }
         if (isAnimating) {
@@ -81,7 +90,7 @@ const DateTime: React.FC = () => {
         return () => {
             clearInterval(intervalId);
         };
-    }, [localMax, isAnimating]);
+    }, [gotTheFirstDictionary, isAnimating, localMax, createAnimationFrame]);
 
     const toggleAnimation = () => dispatch(setIsAnimating(!isAnimating));
 

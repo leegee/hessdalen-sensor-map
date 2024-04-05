@@ -3,7 +3,7 @@ import type { Context } from 'koa';
 import type { FeatureCollection } from 'geojson';
 import type { ParsedUrlQuery } from "querystring";
 
-import { FeatureSourceAttributeType, MapDictionary, QueryParams, QueryResponseType, isFeatureSourceAttributeType } from '@hessdalen-sensor-map/common-types/src';
+import {  MapDictionary, QueryParams, QueryResponseType } from '@hessdalen-sensor-map/common-types/src';
 import config from '@hessdalen-sensor-map/config/src';
 import { CustomError } from '../middleware/errors';
 import { listToCsvLine } from '../lib/csv';
@@ -11,7 +11,7 @@ import { listToCsvLine } from '../lib/csv';
 type SqlBitsType = {
     selectColumns: string[],
     whereColumns: string[],
-    whereParamsStack: Array<string|Date>,
+    whereParamsStack: Array<string>,
     orderByClause?: Array<string|Date>,
 };
 
@@ -180,7 +180,7 @@ async function constructSqlBits(ctx: Context, userArgs: QueryParams): Promise<Sq
         'sensordata.mag_x', 'sensordata.mag_y', 'sensordata.mag_z',
         'loggers.logger_id', 'loggers.point'
     ];
-    const whereParamsStack: Array<string|Date> = [];
+    const whereParamsStack: Array<string> = [];
     const orderByClause: Array<string|Date> = [];
 
     const [spatialWhereColumns, spatialwhereParamsStack] = getSpatialWhereBits(userArgs, whereParamsStack);
@@ -191,19 +191,19 @@ async function constructSqlBits(ctx: Context, userArgs: QueryParams): Promise<Sq
     if (userArgs.from_date !== undefined && userArgs.to_date !== undefined) {
         whereColumns.push( `(timestamp BETWEEN $${whereParamsStack.length + 1} AND $${whereParamsStack.length + 2})` );
         whereParamsStack.push(
-            userArgs.from_date,
-            userArgs.to_date
+            userArgs.from_date.toString(),
+            userArgs.to_date.toString()
         );
         orderByClause.push('timestamp ' + userArgs.sort_order);
     }
     else if (userArgs.from_date !== undefined) {
         whereColumns.push(`(timestamp >= $${whereParamsStack.length + 1})`);
-        whereParamsStack.push(userArgs.from_date);
+        whereParamsStack.push(userArgs.from_date.toString());
         orderByClause.push('timestamp ' + userArgs.sort_order);
     }
     else if (userArgs.to_date !== undefined) {
         whereColumns.push(`(timestamp <= $${whereParamsStack.length + 1})`);
-        whereParamsStack.push(userArgs.to_date);
+        whereParamsStack.push(userArgs.to_date.toString());
         orderByClause.push('timestamp ' + userArgs.sort_order);
     }
 

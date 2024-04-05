@@ -169,16 +169,9 @@ export const selectQueryString = (mapState: MapState): string | undefined => {
   return new URLSearchParams(queryObject).toString();
 };
 
-// export const fetchFeatures = debounce(
-//   _fetchFeatures,
-//   config.gui.apiRequests.debounceMs,
-//   { immediate: true }
-// );
-
-
 export const fetchFeatures: any = createAsyncThunk<FetchFeaturesResposneType, any, { state: RootState }>(
   'data/fetchData',
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   async (_, { dispatch, getState }): Promise<FetchFeaturesResposneType|any> => { 
     const mapState = getState().map;
     console.debug('fetchFeatures - enter');
