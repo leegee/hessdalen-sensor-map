@@ -22,8 +22,8 @@ const DateTime: React.FC = () => {
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
 
     const createAnimationFrame = useCallback((intervalId: NodeJS.Timeout | undefined): NodeJS.Timeout | undefined => {
-        const nextLocalTime = Number(localTime) + 10000;  // Number(config.gui.time_window_ms);
-
+        const nextLocalTime = Number(localTime) + (10 * 60 * 1000);  // Number(config.gui.time_window_ms || 10000);
+        console.debug(`createAnimationFrame at localTime ${localTime}, localMax ${localMax}, dict.max ${dictionary?.datetime?.max}`);
         if (nextLocalTime <= Number(localMax)) {
             console.debug(`GO! nextLocalTime < ${Number(localMax)}, updating localTime `);
             handleSliderChange(nextLocalTime);
@@ -66,6 +66,7 @@ const DateTime: React.FC = () => {
             setLocalTime(Number(dictionary.datetime.min));
             console.debug({
                 action: 'Got the first dictionary',
+                datetime: dictionary.datetime,
                 localMin: new Date(dictionary.datetime.min).toLocaleString(),
                 localMax: new Date(dictionary.datetime.max).toLocaleString(),
                 localTime: new Date(dictionary.datetime.min).toLocaleString(),
@@ -80,7 +81,7 @@ const DateTime: React.FC = () => {
         }
         if (isAnimating) {
             console.info('animation toggled to start');
-            intervalId = createAnimationFrame(intervalId);
+            // intervalId = createAnimationFrame(intervalId);
             intervalId = setTimeout(() => createAnimationFrame(intervalId), ANIMATION_SPEED);
         } else if (intervalId) {
             console.info(`animation - toggled to stop`);

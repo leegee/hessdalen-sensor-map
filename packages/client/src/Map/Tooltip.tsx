@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { get } from 'react-intl-universal';
 import type { Map } from 'ol';
 import { MapBrowserEvent } from 'ol';
 import { FeatureLike } from 'ol/Feature';

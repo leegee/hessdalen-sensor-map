@@ -15,6 +15,12 @@ type SqlBitsType = {
     orderByClause?: Array<string|Date>,
 };
 
+type UserArgsType = QueryParams & {
+    timestamp_min: Number;
+    timestamp_max: Number;
+};
+
+
 export async function search(ctx: Context) {
     const body: QueryResponseType = {
         msg: '',
@@ -23,7 +29,7 @@ export async function search(ctx: Context) {
         results: undefined,
     };
 
-    const userArgs: QueryParams | null = await getCleanArgs(ctx);
+    const userArgs: UserArgsType | null = await getCleanArgs(ctx);
 
     if (!userArgs) {
         throw new CustomError({
@@ -103,7 +109,7 @@ async function sendCsvResponse(ctx: Context, sql: string, sqlBits: SqlBitsType) 
 
 async function getCleanArgs(ctx) {
     const args: ParsedUrlQuery = ctx.request.query;
-    const userArgs: QueryParams = {
+    const userArgs: UserArgsType = {
         zoom: parseInt(args.zoom as string),
         minlng: parseFloat(args.minlng as string),
         minlat: parseFloat(args.minlat as string),
@@ -111,33 +117,31 @@ async function getCleanArgs(ctx) {
         maxlat: parseFloat(args.maxlat as string),
         to_date: args.to_date ? (Array.isArray(args.to_date) ? args.to_date[0] : args.to_date) : undefined,
         from_date: args.from_date ? (Array.isArray(args.from_date) ? args.from_date[0] : args.from_date) : undefined,
+        timestamp_min: 0,
+        timestamp_max: 0,
     };
 
     console.log('...............from_date in:', Number(userArgs.from_date));
 
+
+    const [spatialWhereClause, spatialwhereParamsStack] = getSpatialWhereBits(userArgs, []);
+    const sql = `SELECT MIN(sensordata.timestamp) AS min, MAX(sensordata.timestamp) AS max 
+        FROM sensordata
+        JOIN loggers ON sensordata.logger_id = loggers.logger_id
+        WHERE ${spatialWhereClause}
+    `;
+    try {
+        const { rows } = await ctx.dbh.query(sql, spatialwhereParamsStack);
+        userArgs.timestamp_min = new Date(rows[0].min).getTime();
+        userArgs.timestamp_max = new Date(rows[0].max).getTime();
+    } catch (error) {
+        console.error({action: 'getCleanArgs default from_date', sql, spatialwhereParamsStack });
+        throw error;
+    }
+
     if (!userArgs.from_date || Number(userArgs.from_date) < 0) {
-        const [spatialWhereClause, spatialwhereParamsStack] = getSpatialWhereBits(userArgs, []);
-        const sql = `SELECT MIN(sensordata.timestamp) FROM sensordata
-            JOIN loggers ON sensordata.logger_id = loggers.logger_id
-            WHERE ${spatialWhereClause}
-        `;
-        try {
-            const { rows } = await ctx.dbh.query(sql, spatialwhereParamsStack);
-            userArgs.from_date = new Date(rows[0].min).getTime();
-            userArgs.to_date = userArgs.from_date + Number(config.gui.time_window_ms) ;
-            console.log({
-                action: 'getCleanArgs default from_date', rows,
-                from_date: userArgs.from_date,
-                to_date: userArgs.to_date,
-                from_Date: new Date(userArgs.from_date).toISOString(),
-                to_Date: new Date(userArgs.to_date).toISOString(),
-                sql,
-                spatialWhereClause
-            })
-        } catch (error) {
-            console.error({action: 'getCleanArgs default from_date', sql, spatialwhereParamsStack });
-            throw error;
-        }
+        userArgs.from_date = Number(userArgs.timestamp_min);
+        userArgs.to_date = Number(userArgs.timestamp_max);
     }
 
     console.log('...............b', userArgs.from_date);
@@ -160,19 +164,19 @@ async function getCleanArgs(ctx) {
 
 /**
  * 
- * @param userArgs QueryParams
+ * @param userArgs UserArgsType
  * @param whereParamsStack Current 'whereParamsStack' stack
  * @returns A string, and the updated 'whereParamsStack' stack.
  * @example const [spatialWhereColumns, spatialwhereParamsStack] = getSpatialWhereBits(userArgs, whereParamsStack);
  */
-function getSpatialWhereBits(userArgs: QueryParams, whereParamsStack): [string, string[]] {
+function getSpatialWhereBits(userArgs: UserArgsType, whereParamsStack): [string, string[]] {
     return [
         `(loggers.point && ST_Transform(ST_MakeEnvelope($${whereParamsStack.length + 1}, $${whereParamsStack.length + 2}, $${whereParamsStack.length + 3}, $${whereParamsStack.length + 4}, 4326), 3857))`,
         [String(userArgs.minlng), String(userArgs.minlat), String(userArgs.maxlng), String(userArgs.maxlat)]
     ];
 }
 
-async function constructSqlBits(ctx: Context, userArgs: QueryParams): Promise<SqlBitsType> {
+async function constructSqlBits(ctx: Context, userArgs: UserArgsType): Promise<SqlBitsType> {
     const whereColumns: string[] = [];
     const selectColumns = [
         'sensordata.logger_id', 'sensordata.measurement_number',

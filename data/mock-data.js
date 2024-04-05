@@ -36,7 +36,7 @@ function generateLocationCsv ( locations, filePath ) {
 
 function generateSensorData ( loggerIds ) {
     let data = [];
-    let startDate = new Date();
+    let startDate = new Date( '2222-02-02T00:00:00Z' );
     let totalIntervals = 7 * 24 * 6; // 7 days * 24 hours * 6 intervals per hour
     let interval = 10 * 60 * 1000; // 10 minutes in milliseconds
 
