@@ -8,20 +8,20 @@ const predefinedStyles = {
         'circle-radius': [
             'interpolate',
             ['linear'],
-            ['get', 'rc_temperature'],
+            ['+', ['get', 'mag_x'], ['get', 'mag_y'], ['get', 'mag_z']],
             0,
             4,
-            1,
-            8,
+            3,
+            10,
         ],
         'circle-fill-color': [
             'interpolate',
             ['linear'],
-            ['get', 'rc_temperature'],     // Numeric property to base the color on
-            0,                                  // Minimum value of the numeric property
-            'navy',                    // Dark color for minimum value
-            1,                              // Maximum value of the numeric property
-            'cyan'                    // Light color for maximum value
+            ['get', 'rc_temperature'],      // Numeric property to base the color on
+            -50,                              // Minimum value of the numeric property
+            'navy',                         // Dark color for minimum value
+            50,                              // Maximum value of the numeric property
+            'cyan'                          // Light color for maximum value
         ],
         'circle-rotate-with-view': false,
         'circle-displacement': [0, 0],
@@ -54,18 +54,39 @@ const predefinedStyles = {
 };
 
 const vectorSource = new Vector({
-    // url: 'data/geojson/world-cities.geojson',
     format: new GeoJSON(),
     wrapX: true,
 });
 
 export const vectorLayer = new WebGLPointsLayer({
     source: vectorSource,
-    style: predefinedStyles.circles,
+    style: style()
 });
 
 vectorLayer.set('name', 'points');
 vectorLayer.setVisible(true);
+
+export function style() {
+    return {
+        'circle-radius': [
+            'interpolate',
+            ['linear'],
+            ['+', ['get', 'mag_x'], ['get', 'mag_y'], ['get', 'mag_z']],
+            0,
+            4,
+            3,
+            10,
+        ],
+        'circle-fill-color': [
+            'interpolate', ['linear'],
+            ['get', 'rc_temperature'],  
+            -50, 'navy',                     
+            50, 'cyan'                      
+        ],
+        'circle-rotate-with-view': false,
+        'circle-displacement': [0, 0],
+    }
+}
 
 export function updateVectorLayer(featureCollection: UfoFeatureCollection) {
     window.document.body.style.cursor = 'wait';
