@@ -26,6 +26,7 @@ export type ConfigType = {
     debug: boolean;
   };
   gui: {
+    animation_speed: number;
     time_window_ms: number;
     debounce: number;
     apiRequests: {
@@ -64,6 +65,8 @@ const config: ConfigType = {
   },
   gui: {
     debounce: 500,
+    animation_speed: 1000,
+    time_window_ms: 1000 * 60 * 12, // 12 hours
     apiRequests: {
       debounceMs: 1000,
     },
@@ -74,7 +77,6 @@ const config: ConfigType = {
       zoomLevelForPoints: 8,
       zoomLevelForPointDetails: 11,
     },
-    time_window_ms: 1000 * 60 * 12, // 12 hours
   },
   minQLength: 3,
   flags: {

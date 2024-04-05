@@ -60,7 +60,7 @@ export async function search(ctx: Context) {
                 console.log({ action: 'query', msg: `Found ${rows[0].jsonb_build_object.features.length} features` });
             }
             body.results = rows[0].jsonb_build_object as FeatureCollection;
-            body.dictionary = await getDictionary(body.results);
+            body.dictionary = getDictionary( userArgs);
             ctx.body = JSON.stringify(body);
             console.log(body.dictionary.datetime)
         }
@@ -249,38 +249,11 @@ function csvForPoints(sqlBits: SqlBitsType) {
 }
 
 
-async function getDictionary(featureCollection: FeatureCollection | undefined) {
-    const dictionary: MapDictionary = {
+function getDictionary( userArgs: UserArgsType): MapDictionary {
+    return  {
         datetime: {
-            min: Infinity,
-            max: 0,
+            min: userArgs.timestamp_min,
+            max: userArgs.timestamp_max,
         },
-    };
-
-    let min = Infinity;
-    let max = 0;
-
-    if (!featureCollection || !featureCollection.features) {
-        console.warn({ action: 'getDictionary', warning: 'no features', featureCollection });
-        return dictionary;
-    }
-
-    for (const feature of featureCollection.features) {
-        let thisDatetime: number;
-
-        thisDatetime = new Date(feature.properties?.timestamp).getTime();
-
-        if (typeof thisDatetime !== 'undefined') {
-            if (typeof min === 'undefined' || thisDatetime < min) {
-                min = thisDatetime;
-            }
-            if (typeof max === 'undefined' || thisDatetime > max) {
-                max = thisDatetime;
-            }
-        }
-    }
-
-    dictionary.datetime = { min, max };
-
-    return dictionary;
+    } as MapDictionary;
 }

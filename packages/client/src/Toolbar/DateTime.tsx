@@ -9,8 +9,6 @@ import { RootState } from '../redux/store';
 
 import './DateTime.css';
 
-const ANIMATION_SPEED = 3000;
-
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
     const { dictionary, from_date } = useSelector((state: RootState) => state.map);
@@ -82,7 +80,7 @@ const DateTime: React.FC = () => {
         if (isAnimating) {
             console.info('animation toggled to start');
             // intervalId = createAnimationFrame(intervalId);
-            intervalId = setTimeout(() => createAnimationFrame(intervalId), ANIMATION_SPEED);
+            intervalId = setTimeout(() => createAnimationFrame(intervalId), Number(config.gui.animation_speed));
         } else if (intervalId) {
             console.info(`animation - toggled to stop`);
             clearInterval(intervalId);
