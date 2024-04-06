@@ -17,7 +17,7 @@ import labelsLayer from './lib/map-base-layer/layer-labels';
 import baseLayerDark from './lib/map-base-layer/layer-dark';
 import baseLayerLight from './lib/map-base-layer/layer-osm';
 import baseLayerGeo from './lib/map-base-layer/layer-geo';
-import { updateVectorLayer as updatePointsLayer, vectorLayer as pointsLayer } from './lib/WebGlPointsLayer';
+import { updateVectorLayer as updatePointsLayer, vectorLayer as pointsLayer } from './lib/PointsVectorLayer';
 import ThemeToggleButton from './Map/ThemeToggleButton';
 import LocaleManager from './LocaleManager';
 
@@ -140,7 +140,7 @@ const OpenLayersMap: React.FC = () => {
 
   useEffect(() => {
     if (!mapElementRef.current || !featureCollection) return;
-    updatePointsLayer(featureCollection);
+    updatePointsLayer(featureCollection, mapRef.current);
   }, [featureCollection]);
 
   return (
