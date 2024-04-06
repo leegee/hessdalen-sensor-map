@@ -4,11 +4,11 @@ import { bbox } from "ol/loadingstrategy";
 import GeoJSON from 'ol/format/GeoJSON';
 import VectorLayer from 'ol/layer/Vector';
 import VectorSource from 'ol/source/Vector';
-
-import type { UfoFeatureCollectionType } from '@ufo-monorepo-test/common-types';
 import type { StyleFunction } from "ol/style/Style";
-import { type Map, Overlay, Feature } from "ol";
+import { type Map, Overlay, type Feature } from "ol";
 import { sightingsStyleFunction } from "./map-style";
+import type {  SimpleGeometry } from "ol/geom";
+import type { UfoFeatureCollectionType } from '@ufo-monorepo-test/common-types';
 
 const vectorSource = new VectorSource({
     strategy: bbox,
@@ -65,7 +65,12 @@ export function updateVectorLayer(featureCollection: UfoFeatureCollectionType, m
         overlays.push(overlay);
 
         // Set the position of the overlay
-        const coordinates = feature.getGeometry()?.getCoordinates();
-        overlay.setPosition(coordinates);
+        const geom = feature.getGeometry();
+        if (geom) {
+            const coordinates =( geom as SimpleGeometry).getCoordinates();
+            if (coordinates) {
+                overlay.setPosition(coordinates);
+            }
+        }
     });
 }

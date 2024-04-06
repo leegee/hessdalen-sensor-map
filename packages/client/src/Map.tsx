@@ -139,7 +139,7 @@ const OpenLayersMap: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!mapElementRef.current || !featureCollection) return;
+    if (!mapElementRef.current || !featureCollection || !mapRef.current) return;
     updatePointsLayer(featureCollection, mapRef.current);
   }, [featureCollection]);
 
