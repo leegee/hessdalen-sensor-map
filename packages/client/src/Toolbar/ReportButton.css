@@ -1,4 +1,4 @@
-.report-button {
+#report-button {
     .close-full-width::after {
         content: '◀';
     }

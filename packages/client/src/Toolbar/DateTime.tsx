@@ -91,6 +91,17 @@ const DateTime: React.FC = () => {
         };
     }, [gotTheFirstDictionary, isAnimating, localMax, createAnimationFrame]);
 
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown)
+    });
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            toggleAnimation();
+        }
+    }
+
     const toggleAnimation = () => dispatch(setIsAnimating(!isAnimating));
 
     return (

@@ -8,7 +8,7 @@ import './ReportButton.css';
 
 const ReportButton: React.FC = () => {
     const dispatch = useDispatch();
-    const { panel } = useSelector((state: RootState) => state.gui);
+    const { panel, isAnimating } = useSelector((state: RootState) => state.gui);
 
     useEffect(() => {
         console.log("Panel state:", panel);
@@ -23,7 +23,7 @@ const ReportButton: React.FC = () => {
     };
 
     return (
-        <button className='component highlightable report-button' onClick={togglePanel}>
+        <button id='report-button' disabled={isAnimating} className='component highlightable' onClick={togglePanel}>
             {panel === 'full' ? (
                 <span className='close-full-width' title={get('close')} aria-label={get('close')} />
             ) : (
