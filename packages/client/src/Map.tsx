@@ -136,8 +136,8 @@ const OpenLayersMap: React.FC = () => {
       mapRef.current = map;
       setupFeatureHighlighting(mapRef.current);
 
-      map.on('moveend', debounce(handleMoveEnd, Number(config.gui.debounce || 500), { immediate: true }));
-      map.on('click', debounce((e: MapBrowserEvent<UIEvent>) => clickMap(e, map, dispatch), config.gui.debounce, { immediate: true }));
+      map.on('moveend', handleMoveEnd);
+      map.on('click', (e: MapBrowserEvent<UIEvent>) => clickMap(e, map, dispatch));
     }
 
     return () => mapRef.current?.dispose();
