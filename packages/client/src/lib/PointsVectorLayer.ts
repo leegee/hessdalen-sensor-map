@@ -49,39 +49,6 @@ export function updateVectorLayer(featureCollection: UfoFeatureCollectionType, m
     vectorSource.changed();
 }
 
-function addTables(map: Map) {
-    // Loop through the features and create an overlay for each feature
-    vectorSource.getFeatures().forEach((feature: Feature) => {
-        const properties = feature.getProperties();
-
-        // Create overlay content inline
-        const overlayContent = `
-                <div class="ol-overlay" style='font-size: 8pt; background: black'>
-                    <div>Mag X ${properties.mag_x}</div>
-                    <div>Mag Y ${properties.mag_y}</div>
-                    <div>Mag Z ${properties.mag_z}</div>
-                </div>
-            `;
-
-        const element: HTMLDivElement = document.createElement('div');
-        element.innerHTML = overlayContent;
-
-        const overlay = new Overlay({
-            element,
-            positioning: 'bottom-center',
-            offset: [0, 70],
-        });
-
-        // Add the overlay to the map
-        map.addOverlay(overlay);
-        // Store to later remove
-        overlays.push(overlay);
-        console.log('Overlays added:', overlays.length);
-
-        // Set the position of the overlay
-        _setOverlayToFeaturePosition(overlay, feature);
-    });
-}
 
 function _setOverlayToFeaturePosition(overlay: Overlay, feature: Feature) {
     const geom = feature.getGeometry();
@@ -149,8 +116,43 @@ function addRings(map: Map) {
     console.log('Overlays added:,', overlays.length);
 }
 
+/*
+function addTables(map: Map) {
+    // Loop through the features and create an overlay for each feature
+    vectorSource.getFeatures().forEach((feature: Feature) => {
+        const properties = feature.getProperties();
 
+        // Create overlay content inline
+        const overlayContent = `
+                <div class="ol-overlay" style='font-size: 8pt; background: black'>
+                    <div>Mag X ${properties.mag_x}</div>
+                    <div>Mag Y ${properties.mag_y}</div>
+                    <div>Mag Z ${properties.mag_z}</div>
+                </div>
+            `;
 
+        const element: HTMLDivElement = document.createElement('div');
+        element.innerHTML = overlayContent;
+
+        const overlay = new Overlay({
+            element,
+            positioning: 'bottom-center',
+            offset: [0, 70],
+        });
+
+        // Add the overlay to the map
+        map.addOverlay(overlay);
+        // Store to later remove
+        overlays.push(overlay);
+        console.log('Overlays added:', overlays.length);
+
+        // Set the position of the overlay
+        _setOverlayToFeaturePosition(overlay, feature);
+    });
+}
+*/
+
+/*
 function _createRingSVG(values: Record<string, number>) {
     const keys = Object.keys(values);
     const innerRadius = 8;
@@ -194,3 +196,4 @@ function _createRingSVG(values: Record<string, number>) {
     
     return svg;
 }
+*/
