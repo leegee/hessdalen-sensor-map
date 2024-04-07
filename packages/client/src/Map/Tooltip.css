@@ -5,8 +5,8 @@
     box-shadow: 0 2pt 4pt rgba(0, 0, 0, 0.1);
     font-size: 12pt;
     color: #eee;
-    z-index: 10;
     border: 1pt solid var(--ufo-primary-border-clr);
+    z-index: 1000;
 
 
     h4 {

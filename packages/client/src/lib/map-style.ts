@@ -43,7 +43,7 @@ export const sightingsStyleFunction = (feature: FeatureLike): Style | Style[] =>
     const selectionId = store.getState().gui.selectionId;
     const selected = selectionId && selectionId === feature.get('id');
     const score = parseFloat(feature.get('search_score') as string);
-    const color = 'cyan';
+    const color = 'transparent';
     const hue = '40';
     return [
         new Style({

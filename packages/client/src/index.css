@@ -161,3 +161,17 @@ input[type=range]:focus {
   background: var(--ufo-primary-border-clr);
   border-radius: 4pt;
 }
+
+
+
+.mag_x {
+  background-color: blue;
+}
+
+.mag_y {
+  background-color: white;
+}
+
+.mag_z {
+  background-color: red;
+}

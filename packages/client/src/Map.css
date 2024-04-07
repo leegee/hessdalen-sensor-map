@@ -92,3 +92,21 @@
 .map-ctrls .map-ctrl:last-child {
     padding-bottom: 0 !important;
 }
+
+svg {
+    circle {
+        fill: none;
+    }
+
+    .mag_x {
+        stroke: blue;
+    }
+
+    .mag_y {
+        stroke: white;
+    }
+
+    .mag_z {
+        stroke: red;
+    }
+}

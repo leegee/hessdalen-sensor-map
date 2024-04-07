@@ -19,6 +19,7 @@ import baseLayerLight from './lib/map-base-layer/layer-osm';
 import baseLayerGeo from './lib/map-base-layer/layer-geo';
 import { updateVectorLayer as updatePointsLayer, vectorLayer as pointsLayer } from './lib/PointsVectorLayer';
 import ThemeToggleButton from './Map/ThemeToggleButton';
+import OverlayKeys from './Map/OverlayKeys';
 import LocaleManager from './LocaleManager';
 
 import 'ol/ol.css';
@@ -149,6 +150,7 @@ const OpenLayersMap: React.FC = () => {
         <ThemeToggleButton />
         <LocaleManager />
       </div>
+      <OverlayKeys />
       {mapRef.current && <Tooltip map={mapRef.current} />}
     </section>
   );
