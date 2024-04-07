@@ -38,7 +38,7 @@ export async function errorHandler(ctx: Koa.Context, next: Koa.Next) {
         }
         ctx.body = {
             ...error,
-            error: error.error.toString()
+            error: String(error.error)
         };
     }
 }
