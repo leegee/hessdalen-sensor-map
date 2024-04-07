@@ -12,6 +12,12 @@
     padding: 0 0.3em !important;
 }
 
+
+#status time {
+    margin: 0 0.3em;
+    font-weight: bold;
+}
+
 #status .inner {
     margin-left: 0.3em;
     position: absolute;
@@ -56,8 +62,4 @@
 
 .panel.full-width .full-width-btn::after {
     content: '◀';
-}
-
-#status time {
-    margin: 0 0.3em;
 }
