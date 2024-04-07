@@ -26,36 +26,41 @@ const Panel: React.FC = () => {
     }, [pointsCount, nothingToShow]);
 
     return (
-        <header className='report-ctrl component'>
-            <span className='inner'>
-                {nothingToShow ? (
-                    <>{get('status.no_results')}</>
-                ) : showPoints ? (
-                    <> {get('status.points_count', { count: pointsCount })} </>
-                ) : (
-                    <> Unexpected state </>
-                )}
+        <header id='status' className='component'>
+            < span className='inner' >
+                {
+                    nothingToShow ? (
+                        <> {get('status.no_results')}</>
+                    ) : showPoints ? (
+                        <> {get('status.points_count', { count: pointsCount })} </>
+                    ) : (
+                        <> Unexpected state </>
+                    )}
 
-                {from_date > 0 && (
-                    <>
-                        {get('from')}
-                        <time dateTime={new Date(from_date).toISOString()} >
-                            {new Date(from_date).toLocaleString([], DATE_LOCALE_OPTIONS)
-                            }
-                        </time>
-                    </>
-                )}
+                {
+                    from_date > 0 && (
+                        <>
+                            {get('from')}
+                            <time dateTime={new Date(from_date).toISOString()} >
+                                {new Date(from_date).toLocaleString([], DATE_LOCALE_OPTIONS)
+                                }
+                            </time>
+                        </>
+                    )
+                }
 
-                {to_date > 0 && get('to') && (
-                    <>
-                        {get('to')}
-                        <time dateTime={new Date(to_date).toISOString()}>
-                            {new Date(to_date).toLocaleString()}
-                        </time>
-                    </>
-                )}
-            </span>
-        </header>
+                {
+                    to_date > 0 && get('to') && (
+                        <>
+                            {get('to')}
+                            <time dateTime={new Date(to_date).toISOString()}>
+                                {new Date(to_date).toLocaleString()}
+                            </time>
+                        </>
+                    )
+                }
+            </span >
+        </header >
     );
 };
 

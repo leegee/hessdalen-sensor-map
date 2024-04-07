@@ -1,18 +1,24 @@
 /* ReportCount.css */
 
-.report-ctrl {
+#status {
     line-height: 175% !important;
     padding: 0 !important;
     margin: 0 auto 0 0 !important;
     width: calc(var(--ufo-panel-narrow-width) - 0.6em);
     min-width: calc(var(--ufo-panel-narrow-width) - 0.6em);
+    max-width: calc(var(--ufo-panel-narrow-width) - 0.6em);
     display: flex;
     align-items: center;
     padding: 0 0.3em !important;
 }
 
-.report-ctrl .inner {
+#status .inner {
     margin-left: 0.3em;
+    position: absolute;
+    width: calc(var(--ufo-panel-narrow-width) - 1.6em);
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
 }
 
 .collapse-btn,
@@ -52,6 +58,6 @@
     content: '◀';
 }
 
-time {
+#status time {
     margin: 0 0.3em;
 }
