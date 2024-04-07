@@ -19,7 +19,7 @@ const featureOverlay = new VectorLayer({
                     radius: 10,
                     fill: new Fill({ color: 'transparent' }),
                     stroke: new Stroke({
-                        color: 'orange',
+                        color: 'black',
                         width: 3
                     })
                 }),
@@ -29,7 +29,7 @@ const featureOverlay = new VectorLayer({
                     radius: 13,
                     fill: new Fill({ color: 'transparent' }),
                     stroke: new Stroke({
-                        color: 'white',
+                        color: 'black',
                         width: 1
                     })
                 }),
