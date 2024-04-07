@@ -8,6 +8,7 @@ import { setIsAnimating } from '../redux/guiSlice';
 import { RootState } from '../redux/store';
 
 import './DateTime.css';
+import debounce from 'debounce';
 
 const DateTime: React.FC = () => {
     const dispatch = useDispatch();
@@ -21,30 +22,29 @@ const DateTime: React.FC = () => {
 
     const createAnimationFrame = useCallback((intervalId: NodeJS.Timeout | undefined): NodeJS.Timeout | undefined => {
         const nextLocalTime = Number(localTime) + Number(config.gui.time_window_ms);
-        console.debug(`createAnimationFrame at localTime ${localTime}, localMax ${localMax}, dict.max ${dictionary?.datetime?.max}`);
         if (nextLocalTime <= Number(localMax)) {
-            console.debug(`GO! nextLocalTime < ${Number(localMax)}, updating localTime `);
             handleSliderChange(nextLocalTime);
         } else {
-            console.debug(`Stop! nextLocalTime > Number(${localMax}) (dict max=${Number(dictionary?.datetime?.max ?? 0)} `);
             clearTimeout(intervalId);
             dispatch(setIsAnimating(false));
         }
 
         return intervalId;
-    }, [localTime, localMax, dictionary?.datetime?.max, dispatch]);
+    }, [localTime, localMax, dispatch]);
 
-    const requestFetchFeatures = useCallback(() => {
+    const _requestFetchFeatures = () => {
         dispatch(setFromDate(localTime - Number(config.gui.time_window_ms)));
         dispatch(setToDate(localTime + Number(config.gui.time_window_ms)));
         dispatch(fetchFeatures());
         console.debug({ action: 'submit', localTime, debug_timestamp: new Date().getTime() });
-    }, [dispatch, localTime]);
+    };
 
-    const handleSliderChange = (value: number) => {
-        console.log('slider changed, local time = ', value);
-        return value > 0 ? setLocalTime(Number(value)) : 0;
-    }
+    const requestFetchFeatures = useCallback(
+        debounce(_requestFetchFeatures, config.gui.animation_speed),
+        [dispatch, localTime]
+    );
+
+    const handleSliderChange = (value: number) => value > 0 ? setLocalTime(Number(value)) : 0;
 
     useEffect(
         () => {
@@ -78,11 +78,8 @@ const DateTime: React.FC = () => {
             return;
         }
         if (isAnimating) {
-            console.info('animation toggled to start');
-            // intervalId = createAnimationFrame(intervalId);
             intervalId = setTimeout(() => createAnimationFrame(intervalId), Number(config.gui.animation_speed));
         } else if (intervalId) {
-            console.info(`animation - toggled to stop`);
             clearInterval(intervalId);
         }
 
@@ -97,7 +94,7 @@ const DateTime: React.FC = () => {
     });
 
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
+        if (e.key === 'Escape' || e.key === ' ') {
             toggleAnimation();
         }
     }
