@@ -110,6 +110,12 @@ const OpenLayersMap: React.FC = () => {
     source?.changed();
   }, [selectionId]);
 
+
+  useEffect(() => {
+    if (!mapElementRef.current || !featureCollection || !mapRef.current) return;
+    updatePointsLayer(featureCollection, mapRef.current);
+  }, [featureCollection]);
+
   useEffect(() => {
     if (mapElementRef.current) {
       const map = new Map({
@@ -131,19 +137,12 @@ const OpenLayersMap: React.FC = () => {
       setupFeatureHighlighting(mapRef.current);
 
       map.on('moveend', debounce(handleMoveEnd, Number(config.gui.debounce || 500), { immediate: true }));
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      map.on('click', debounce((e) => clickMap(e, map, dispatch), config.gui.debounce, { immediate: true }));
+      map.on('click', debounce((e: MapBrowserEvent<UIEvent>) => clickMap(e, map, dispatch), config.gui.debounce, { immediate: true }));
     }
 
     return () => mapRef.current?.dispose();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
-
-  useEffect(() => {
-    if (!mapElementRef.current || !featureCollection || !mapRef.current) return;
-    updatePointsLayer(featureCollection, mapRef.current);
-  }, [featureCollection]);
 
   return (
     <section id='map' ref={mapElementRef}>
