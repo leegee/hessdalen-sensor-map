@@ -29,18 +29,20 @@ const overlays: Overlay[] = [];
 
 export function updateVectorLayer(featureCollection: UfoFeatureCollectionType, map: Map) {
     vectorSource.clear();
-    vectorSource.addFeatures(new GeoJSON().readFeatures(featureCollection));
-    vectorSource.changed();
-    console.debug("Number of features added:", vectorSource.getFeatures().length);
-
     // Remove previous overlays
     overlays.forEach((overlay) => {
         map.removeOverlay(overlay);
+        overlay.dispose();
     });
+    console.log('Number of overlays removed:', overlays.length);
     overlays.length = 0;
+
+    vectorSource.addFeatures(new GeoJSON().readFeatures(featureCollection));
+    console.debug("Number of features added:", vectorSource.getFeatures().length);
 
     // addTables();
     addRings(map);
+    vectorSource.changed();
 }
 
 function addTables(map: Map) {
@@ -68,14 +70,16 @@ function addTables(map: Map) {
     
             // Add the overlay to the map
             map.addOverlay(overlay);
+            // Store to later remove
             overlays.push(overlay);
+            console.log('Overlays added:', overlays.length);
     
             // Set the position of the overlay
-            setOverlayToFeaturePosition(overlay, feature);
+            _setOverlayToFeaturePosition(overlay, feature);
         });
 }
 
-function setOverlayToFeaturePosition(overlay: Overlay, feature: Feature) {
+function _setOverlayToFeaturePosition(overlay: Overlay, feature: Feature) {
     const geom = feature.getGeometry();
     if (geom) {
         const coordinates = (geom as SimpleGeometry).getCoordinates();
@@ -85,7 +89,7 @@ function setOverlayToFeaturePosition(overlay: Overlay, feature: Feature) {
     }
 }
 
-function createRingSVG(values: Record<string, number>) {
+function _createRingSVG(values: Record<string, number>) {
     const width = 2;
     const innerRadius = 4;
     const outerRadius = (width * Object.keys(values).length) + innerRadius;
@@ -119,7 +123,7 @@ function createRingSVG(values: Record<string, number>) {
 function addRings(map: Map) {
     vectorSource.getFeatures().forEach((feature: Feature) => {
         const properties = feature.getProperties();
-        const svgContent = createRingSVG(  {
+        const svgContent = _createRingSVG(  {
             mag_x: Number(properties.mag_x),
             mag_y: Number(properties.mag_y),
             mag_z: Number(properties.mag_z),
@@ -133,8 +137,10 @@ function addRings(map: Map) {
             positioning: 'center-center',
             element: svgElement // svgImage
         });
-        setOverlayToFeaturePosition(overlay, feature);
+        _setOverlayToFeaturePosition(overlay, feature);
         map.addOverlay(overlay);
-
+        overlays.push(overlay);
     });
+
+    console.log('Overlays added:,', overlays.length);
 }
