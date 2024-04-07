@@ -98,6 +98,15 @@ svg {
         fill: none;
     }
 
+    .single-circle {
+        fill: grey;
+        stroke: grey;
+    }
+
+    path {
+        stroke-width: 2;
+    }
+
     .mag_x {
         stroke: blue;
     }
@@ -108,5 +117,21 @@ svg {
 
     .mag_z {
         stroke: red;
+    }
+
+    .pie {
+        stroke-width: 4;
+    }
+
+    .pie.mag_x {
+        fill: none;
+    }
+
+    .pie.mag_y {
+        fill: none;
+    }
+
+    .pie.mag_z {
+        fill: none;
     }
 }

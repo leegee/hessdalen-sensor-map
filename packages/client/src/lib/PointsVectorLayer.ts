@@ -7,7 +7,7 @@ import VectorSource from 'ol/source/Vector';
 import type { StyleFunction } from "ol/style/Style";
 import { type Map, Overlay, type Feature } from "ol";
 import { sightingsStyleFunction } from "./map-style";
-import type {  SimpleGeometry } from "ol/geom";
+import type { SimpleGeometry } from "ol/geom";
 
 import type { UfoFeatureCollectionType } from '@ufo-monorepo-test/common-types';
 
@@ -50,37 +50,37 @@ export function updateVectorLayer(featureCollection: UfoFeatureCollectionType, m
 }
 
 function addTables(map: Map) {
-        // Loop through the features and create an overlay for each feature
-        vectorSource.getFeatures().forEach((feature: Feature) => {
-            const properties = feature.getProperties();
-    
-            // Create overlay content inline
-            const overlayContent = `
+    // Loop through the features and create an overlay for each feature
+    vectorSource.getFeatures().forEach((feature: Feature) => {
+        const properties = feature.getProperties();
+
+        // Create overlay content inline
+        const overlayContent = `
                 <div class="ol-overlay" style='font-size: 8pt; background: black'>
                     <div>Mag X ${properties.mag_x}</div>
                     <div>Mag Y ${properties.mag_y}</div>
                     <div>Mag Z ${properties.mag_z}</div>
                 </div>
             `;
-    
-            const element:  HTMLDivElement = document.createElement('div');
-            element.innerHTML = overlayContent;
-    
-            const overlay = new Overlay({
-                element,
-                positioning: 'bottom-center',
-                offset: [0, 70],
-            });
-    
-            // Add the overlay to the map
-            map.addOverlay(overlay);
-            // Store to later remove
-            overlays.push(overlay);
-            console.log('Overlays added:', overlays.length);
-    
-            // Set the position of the overlay
-            _setOverlayToFeaturePosition(overlay, feature);
+
+        const element: HTMLDivElement = document.createElement('div');
+        element.innerHTML = overlayContent;
+
+        const overlay = new Overlay({
+            element,
+            positioning: 'bottom-center',
+            offset: [0, 70],
         });
+
+        // Add the overlay to the map
+        map.addOverlay(overlay);
+        // Store to later remove
+        overlays.push(overlay);
+        console.log('Overlays added:', overlays.length);
+
+        // Set the position of the overlay
+        _setOverlayToFeaturePosition(overlay, feature);
+    });
 }
 
 function _setOverlayToFeaturePosition(overlay: Overlay, feature: Feature) {
@@ -93,7 +93,7 @@ function _setOverlayToFeaturePosition(overlay: Overlay, feature: Feature) {
     }
 }
 
-function _createRingSVG(values: Record<string, number>) {
+function _createThreeRingSVG(values: Record<string, number>) {
     const width = 2;
     const innerRadius = 4;
     const outerRadius = (width * Object.keys(values).length) + innerRadius;
@@ -112,7 +112,7 @@ function _createRingSVG(values: Record<string, number>) {
                 stroke-width="${width}"
                  stroke-dasharray="${dashArray}"/>`;
     }).join('\n');
-    
+
     // Create the SVG string
     const svgContent = `
         <svg width="${outerRadius * 2}" height="${outerRadius * 2}" xmlns="http://www.w3.org/2000/svg">
@@ -127,11 +127,11 @@ function _createRingSVG(values: Record<string, number>) {
 function addRings(map: Map) {
     vectorSource.getFeatures().forEach((feature: Feature) => {
         const properties = feature.getProperties();
-        const svgContent = _createRingSVG(  {
+        const svgContent = _createThreeRingSVG({ // _createRingSVG
             mag_x: Number(properties.mag_x),
             mag_y: Number(properties.mag_y),
             mag_z: Number(properties.mag_z),
-        }); 
+        });
         // const svgImage = new Image();
         // svgImage.src = 'data:image/svg+xml,' + encodeURIComponent(svgContent);
         const svgElement: HTMLElement = document.createElement('svg');
@@ -147,4 +147,50 @@ function addRings(map: Map) {
     });
 
     console.log('Overlays added:,', overlays.length);
+}
+
+
+
+function _createRingSVG(values: Record<string, number>) {
+    const keys = Object.keys(values);
+    const innerRadius = 8;
+
+    let startAngle = 0;
+    
+    const segments = keys.map((key, index) => {
+        const segmentValue = values[key];
+        const segmentAngle = 360 / keys.length; // Equally portioned segment angle
+        const endAngle = startAngle + segmentAngle;
+    
+        const startX = 50 + innerRadius * Math.cos((startAngle * Math.PI) / 180);
+        const startY = 50 + innerRadius * Math.sin((startAngle * Math.PI) / 180);
+        const endX = 50 + innerRadius * Math.cos((endAngle * Math.PI) / 180);
+        const endY = 50 + innerRadius * Math.sin((endAngle * Math.PI) / 180);
+        
+        const largeArcFlag = segmentAngle > 180 ? 1 : 0;
+    
+        // Calculate stroke length proportional to the value
+        const strokeLength = segmentValue * 2 * Math.PI * innerRadius;
+        
+        const path = `
+            <path 
+                d="M 50 50 L ${startX} ${startY} A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 1 ${endX} ${endY} Z" 
+                class="pie ${key}"
+                stroke="${key}"
+                stroke-dasharray="${strokeLength} ${2 * Math.PI * innerRadius}"
+            />
+        `;
+    
+        startAngle = endAngle; // Update startAngle for the next segment
+        return path;
+    }).join('\n');
+    
+    // Combine the paths into a single SVG circle
+    const svg = `
+        <svg width="200" height="200" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            ${segments}
+        </svg>
+    `;    
+    
+    return svg;
 }
