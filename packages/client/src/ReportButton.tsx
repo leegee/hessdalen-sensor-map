@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { get } from 'react-intl-universal';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from 'redux/store';
-import { setPanel } from '../redux/guiSlice';
+import { setPanel } from './redux/guiSlice';
 
 import './ReportButton.css';
 

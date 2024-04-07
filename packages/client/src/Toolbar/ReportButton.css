@@ -1,9 +1,0 @@
-#report-button {
-    .close-full-width::after {
-        content: '◀';
-    }
-
-    .open-full-width::after {
-        content: '▶';
-    }
-}

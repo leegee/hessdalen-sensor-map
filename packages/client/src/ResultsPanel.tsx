@@ -7,8 +7,9 @@ import { get } from 'react-intl-universal';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectClusterCount, selectPointsCount } from './redux/mapSlice';
 import { RootState } from './redux/store';
-import { setPanel } from './redux/guiSlice';
+import { setPanel } from './redux/guiSlice'
 import FeatureTable from './FeaturesTable';
+import ReportButton from './ReportButton';
 
 import './ResultsPanel.css';
 
@@ -46,7 +47,10 @@ const Panel: React.FC = () => {
                         </p>
                     ) :
                         pointsCount ?
-                            <FeatureTable />
+                            <>
+                                <ReportButton />
+                                <FeatureTable />
+                            </>
                             : <p className='message'>
                                 {get('panel.no_results')} (2)
                             </p>

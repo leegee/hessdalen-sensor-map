@@ -1,0 +1,24 @@
+#report-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    border: 0 !important;
+    right: 0pt;
+    top: 3pt;
+    height: 2em;
+    width: 1.3em;
+    z-index: 2;
+
+    .close-full-width::after {
+        content: '◀';
+    }
+
+    .open-full-width::after {
+        content: '▶';
+    }
+}
+
+#report-button:hover {
+    color: var(--ufo-brand-clr);
+}
