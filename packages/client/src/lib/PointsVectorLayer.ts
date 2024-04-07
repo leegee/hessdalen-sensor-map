@@ -37,8 +37,12 @@ export function updateVectorLayer(featureCollection: UfoFeatureCollectionType, m
     console.log('Number of overlays removed:', overlays.length);
     overlays.length = 0;
 
-    vectorSource.addFeatures(new GeoJSON().readFeatures(featureCollection));
-    console.debug("Number of features added:", vectorSource.getFeatures().length);
+    if (featureCollection.features) {
+        vectorSource.addFeatures(new GeoJSON().readFeatures(featureCollection));
+        console.debug("Number of features added:", vectorSource.getFeatures().length);
+    } else {
+        console.debug("No of features added");
+    }
 
     // addTables();
     addRings(map);

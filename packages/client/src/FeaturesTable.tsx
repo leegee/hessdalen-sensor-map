@@ -100,7 +100,10 @@ const FeatureTable: React.FC = () => {
         <table id='feature-table'>
             <thead className='thead'>
                 <tr className='tr'>
-                    <th className='th datetime'>{get('feature_table.date')}</th>
+                    {localFeatures.length && localFeatures[0].properties.timestamp
+                        ? (<th className='th timestamp'>{get('feature_table.date')}</th>)
+                        : ''
+                    }
                     <th className='th number'>{get('feature_table.mag_x')}</th>
                     <th className='th number'>{get('feature_table.mag_y')}</th>
                     <th className='th number'>{get('feature_table.mag_z')}</th>
@@ -111,16 +114,6 @@ const FeatureTable: React.FC = () => {
 
             <tbody className='tbody'>
                 {localFeatures
-                    .slice() // Create a copy of the array to avoid mutating the original array
-                    .sort((a, b) => {
-                        if (a.search_score) {
-                            if (a.search_score < b.search_score) return -1; // Sort a before b
-                            if (a.search_score > b.search_score) return 1;
-                        }
-                        if (a.datetime < b.datetime) return -1;
-                        if (a.datetime > b.datetime) return 1;
-                        return 0; // Leave them unchanged in order
-                    })
                     .map((feature: any, index: number) => (
 
                         <tr className={getRowClass(feature.properties.id)}
@@ -128,20 +121,22 @@ const FeatureTable: React.FC = () => {
                             key={index} id={getRowId(feature.properties.id)}
                             onClick={() => handleClickRow(feature.properties.id)}
                         >
-                            <td className='td datetime'>
-                                {new Intl.DateTimeFormat(config.locale, {
-                                    year: undefined,
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    second: '2-digit'
-                                }).format(new Date(feature.properties.timestamp))}
-                            </td>
-                            <td className='td number'>{feature.properties.mag_x}</td>
-                            <td className='td number'>{feature.properties.mag_y}</td>
-                            <td className='td number'>{feature.properties.mag_z}</td>
-                            <td className='td number'>{feature.properties.rc_temperature}</td>
+                            {feature.properties.timestamp &&
+                                <td className='td timestamp'>
+                                    {new Intl.DateTimeFormat(config.locale, {
+                                        year: undefined,
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit'
+                                    }).format(new Date(String(feature.properties.timestamp)))}
+                                </td>
+                            }
+                            <td className='td number'>{Number(feature.properties.mag_x ?? -999).toFixed(4)}</td>
+                            <td className='td number'>{Number(feature.properties.mag_y ?? -999).toFixed(4)}</td>
+                            <td className='td number'>{Number(feature.properties.mag_z ?? -999).toFixed(4)}</td>
+                            <td className='td number'>{Number(feature.properties.rc_temperature ?? -999).toFixed(4)}</td>
                             <td className='td ctrls'>
                                 <span className='ctrl row-goto-map' onClick={() => showPointOnMap(feature)} />
                                 <Link className='ctrl row-goto-details' to={'/sighting/' + feature.properties.id} />

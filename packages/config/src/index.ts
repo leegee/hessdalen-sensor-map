@@ -61,13 +61,13 @@ const config: ConfigType = {
       search: '/search',
       details: '/details'
     },
-    searchableTextColumnNames: ['location_text', 'report_text'],
+    searchableTextColumnNames: [],
     debug: true,
   },
   gui: {
     debounce: 500,
     animation_speed: 1000,
-    time_window_ms: 1000 * 60 * 12, // 12 hours
+    time_window_ms: 1000 * 60 * 60 * 1, // 1 hours
     apiRequests: {
       debounceMs: 1000,
     },

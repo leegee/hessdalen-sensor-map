@@ -12,7 +12,8 @@ type SqlBitsType = {
     selectColumns: string[],
     whereColumns: string[],
     whereParamsStack: Array<string>,
-    orderByClause?: Array<string|Date>,
+    orderByClause?: Array<string | Date>,
+    groupBy: string,
 };
 
 type UserArgsType = QueryParams & {
@@ -175,13 +176,18 @@ function getSpatialWhereBits(userArgs: UserArgsType, whereParamsStack): [string,
 async function constructSqlBits(ctx: Context, userArgs: UserArgsType): Promise<SqlBitsType> {
     const whereColumns: string[] = [];
     const selectColumns = [
-        'sensordata.logger_id', 'sensordata.measurement_number',
-        'sensordata.timestamp', 'sensordata.rc_temperature',
-        'sensordata.mag_x', 'sensordata.mag_y', 'sensordata.mag_z',
-        'loggers.logger_id', 'loggers.point'
+        'loggers.point',
+        'loggers.logger_id', 
+        'sensordata.logger_id',
+        'AVG(sensordata.rc_temperature) as rc_temperature',
+        'AVG(sensordata.mag_x) as mag_x',
+        'AVG(sensordata.mag_y) as mag_y',
+        'AVG(sensordata.mag_z) as mag_z',
+        'MIN(sensordata.timestamp) AS timestamp'
     ];
     const whereParamsStack: Array<string> = [];
-    const orderByClause: Array<string|Date> = [];
+    const orderByClause: Array<string | Date> = [];
+    const groupBy = 'GROUP BY sensordata.logger_id, loggers.logger_id,  loggers.point';
 
     const [spatialWhereColumns, spatialwhereParamsStack] = getSpatialWhereBits(userArgs, whereParamsStack);
 
@@ -192,15 +198,15 @@ async function constructSqlBits(ctx: Context, userArgs: UserArgsType): Promise<S
     const to_date_str = `${userArgs.to_date}`;
 
     if (userArgs.from_date !== undefined && userArgs.to_date !== undefined) {
-        whereColumns.push( `(timestamp BETWEEN $${whereParamsStack.length + 1} AND $${whereParamsStack.length + 2})` );
+        whereColumns.push( `(sensordata.timestamp BETWEEN $${whereParamsStack.length + 1} AND $${whereParamsStack.length + 2})` );
         whereParamsStack.push( from_date_str, to_date_str );
     }
     else if (userArgs.from_date !== undefined) {
-        whereColumns.push(`(timestamp >= $${whereParamsStack.length + 1})`);
+        whereColumns.push(`(sensordata.timestamp >= $${whereParamsStack.length + 1})`);
         whereParamsStack.push(from_date_str);
     }
     else if (userArgs.to_date !== undefined) {
-        whereColumns.push(`(timestamp <= $${whereParamsStack.length + 1})`);
+        whereColumns.push(`(sensordata.timestamp <= $${whereParamsStack.length + 1})`);
         whereParamsStack.push(to_date_str);
     }
 
@@ -209,6 +215,7 @@ async function constructSqlBits(ctx: Context, userArgs: UserArgsType): Promise<S
         whereColumns: whereColumns,
         whereParamsStack: whereParamsStack,
         orderByClause: orderByClause.length ? orderByClause : undefined,
+        groupBy
     };
 
     return rv;
@@ -216,15 +223,21 @@ async function constructSqlBits(ctx: Context, userArgs: UserArgsType): Promise<S
 
 
 function innserSelect(sqlBits: SqlBitsType) {
-    return `SELECT ${sqlBits.selectColumns.join(', ')}, sensordata.logger_id 
-    FROM sensordata
-    JOIN loggers ON sensordata.logger_id = loggers.logger_id
-    WHERE ${sqlBits.whereColumns.join(' AND ')}
-    ) AS s`;
+    // return `SELECT ${sqlBits.selectColumns.join(', ')}, sensordata.logger_id 
+    // FROM sensordata
+    // JOIN loggers ON sensordata.logger_id = loggers.logger_id
+    // WHERE ${sqlBits.whereColumns.join(' AND ')}
+    // ) AS s`;
+    return `SELECT ${sqlBits.selectColumns.join(', ')}
+        FROM sensordata
+        JOIN loggers ON sensordata.logger_id = loggers.logger_id
+        WHERE ${sqlBits.whereColumns.join(' AND ')}
+        ${sqlBits.groupBy}`; 
 }
 
 function geoJsonForPoints(sqlBits: SqlBitsType) {
-    return `SELECT jsonb_build_object(
+    return `
+        SELECT jsonb_build_object(
             'type', 'FeatureCollection',
             'features', jsonb_agg(feature),
             'pointsCount', COUNT(*),
@@ -233,12 +246,13 @@ function geoJsonForPoints(sqlBits: SqlBitsType) {
         FROM (
             SELECT jsonb_build_object(
                 'type', 'Feature',
-                'geometry', ST_AsGeoJSON(s.point, 3857)::jsonb,
-                'properties', to_jsonb(s) - 'point'
-            ) AS feature
+                'geometry', ST_AsGeoJSON(fc.point, 3857)::jsonb,
+                'properties', to_jsonb(fc) - 'point'
+          ) AS feature
         FROM (
             ${innserSelect(sqlBits)}
-        ) AS fc`;
+        ) AS fc
+    ) as final_query`;
 }
 
 

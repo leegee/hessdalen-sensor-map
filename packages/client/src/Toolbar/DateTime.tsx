@@ -20,7 +20,7 @@ const DateTime: React.FC = () => {
     const [gotTheFirstDictionary, setGotTheFirstDictionary] = useState(false);
 
     const createAnimationFrame = useCallback((intervalId: NodeJS.Timeout | undefined): NodeJS.Timeout | undefined => {
-        const nextLocalTime = Number(localTime) + (10 * 60 * 1000);  // Number(config.gui.time_window_ms || 10000);
+        const nextLocalTime = Number(localTime) + Number(config.gui.time_window_ms);
         console.debug(`createAnimationFrame at localTime ${localTime}, localMax ${localMax}, dict.max ${dictionary?.datetime?.max}`);
         if (nextLocalTime <= Number(localMax)) {
             console.debug(`GO! nextLocalTime < ${Number(localMax)}, updating localTime `);
@@ -114,6 +114,7 @@ const DateTime: React.FC = () => {
                 name='datetime'
                 min={localMin}
                 max={localMax}
+                step={(localMax - localMin) / config.gui.time_window_ms}
                 value={localTime}
                 onInput={(e) => handleSliderChange(parseInt(e.currentTarget.value))}
                 onMouseUp={requestFetchFeatures}
