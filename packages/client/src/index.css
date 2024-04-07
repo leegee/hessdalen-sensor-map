@@ -165,7 +165,7 @@ input[type=range]:focus {
 
 
 .mag_x {
-  background-color: blue;
+  background-color: red;
 }
 
 .mag_y {
@@ -173,5 +173,5 @@ input[type=range]:focus {
 }
 
 .mag_z {
-  background-color: red;
+  background-color: blue;
 }

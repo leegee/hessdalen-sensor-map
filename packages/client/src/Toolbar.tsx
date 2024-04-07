@@ -11,7 +11,7 @@ import './Toolbar.css';
 const Toolbar: React.FC = () => {
     return (<nav className='toolbar'>
         <ReportCount />
-        <Dimensions />
+        {/* <Dimensions /> */}
         <DateTime />
         <ReportButton />
         <DonwloadCsvButton />

@@ -36,6 +36,7 @@ export type ConfigType = {
       centre: [number, number];
       cluster_eps_metres: number;
       initZoom: number;
+      maxZoom: number;
       zoomLevelForPoints: number;
       zoomLevelForPointDetails: number;
     };
@@ -74,6 +75,7 @@ const config: ConfigType = {
       centre: [10.59, 62.25] as [number, number], 
       cluster_eps_metres: 50000, // The distance between clusters
       initZoom: 10,
+      maxZoom: 14,
       zoomLevelForPoints: 8,
       zoomLevelForPointDetails: 11,
     },
