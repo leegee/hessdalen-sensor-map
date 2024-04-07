@@ -1,7 +1,6 @@
 import React, { type Dispatch, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { type UnknownAction } from '@reduxjs/toolkit';
-import debounce from 'debounce';
 import { Map, type MapBrowserEvent, View } from 'ol';
 import { fromLonLat, transformExtent } from 'ol/proj';
 import { easeOut } from 'ol/easing';

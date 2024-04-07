@@ -1,14 +1,9 @@
 // lib/sightings-styles.ts.ts
 
 import { FeatureLike } from "ol/Feature";
-import { Circle, Fill, Stroke, Style, Text } from "ol/style";
+import { Circle, Fill, Stroke, Style } from "ol/style";
 
 import { store } from "../redux/store";
-
-const bgSaturation = 100;
-const bgLightness = 50;
-const borderSaturation = 80;
-const borderLightness = 20;
 
 export function mapScoreToHue(score: number): number {
     const value = Math.min(Math.max(score, 0), 1);
@@ -16,35 +11,10 @@ export function mapScoreToHue(score: number): number {
     return hue;
 }
 
-function mapLocalClusterToColor(): string {
-    // console.log(feature)
-    return 'blue';
-}
-
-const rings = [
-    new Style({
-        image: new Circle({
-            radius: 100,
-            fill: new Fill({ color: 'transparent' }),
-            stroke: new Stroke({ width: 2, color: 'lime' }),
-        }),
-    }),
-    new Style({
-        image: new Circle({
-            radius: 50,
-            fill: new Fill({ color: 'transparent' }),
-            stroke: new Stroke({ width: 2, color: 'lime' }),
-        }),
-    }),
-];
-
 export const sightingsStyleFunction = (feature: FeatureLike): Style | Style[] => {
-    const features = feature.get('features') as any[] | undefined;
     const selectionId = store.getState().gui.selectionId;
     const selected = selectionId && selectionId === feature.get('id');
-    const score = parseFloat(feature.get('search_score') as string);
     const color = 'transparent';
-    const hue = '40';
     return [
         new Style({
             image: new Circle({

@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import './Dimensions.css';
 import { useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
-import { setSelectedDimensions } from '../redux/mapSlice';
+import { DimensionsMapType, setSelectedDimensions } from '../redux/mapSlice';
 
 const dimensions = ['mag_x', 'mag_y', 'mag_z', 'rc_temperature'];
 
@@ -14,9 +14,11 @@ const Dimensions: React.FC = () => {
     const dispatch = useDispatch();
 
     const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedOptions: Record<string, boolean> = {};
+        const selectedOptions: DimensionsMapType = {
+            mag_x: true, mag_y: true, mag_z: true
+        };
         Array.from(event.target.selectedOptions).forEach((option) => {
-            selectedOptions[option.value] = option.selected;
+            (selectedOptions as any)[option.value] = option.selected;
         });
         dispatch(setSelectedDimensions(selectedOptions));  // Dispatch the action to update Redux state
     };
