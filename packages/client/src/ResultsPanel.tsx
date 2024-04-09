@@ -6,7 +6,6 @@ import React, { useEffect, useState } from 'react';
 import { get } from 'react-intl-universal';
 import { useDispatch, useSelector } from 'react-redux';
 import { selectPointsCount } from './redux/mapSlice';
-import { RootState } from './redux/store';
 import { setPanel } from './redux/guiSlice'
 import FeatureTable from './FeaturesTable';
 import ReportButton from './ReportButton';
@@ -15,8 +14,7 @@ import './ResultsPanel.css';
 
 const Panel: React.FC = () => {
     const dispatch = useDispatch();
-    const pointsCount = useSelector(selectPointsCount);
-    const { isAnimating } = useSelector((state: RootState) => state.gui);
+    const pointsCount = Number(useSelector(selectPointsCount));
 
     const [nothingToShow, setNothingToShow] = useState<boolean>(true);
 
