@@ -10,31 +10,9 @@ import { createAsyncThunk, createSelector, createSlice, PayloadAction } from '@r
 import debounce from 'debounce';
 
 import config from '@hessdalen-sensor-map/config/src';
-import { FeatureSourceAttributeType, MapDictionaryType } from '@hessdalen-sensor-map/common-types';
+import { UfoFeatureCollection, FetchFeaturesResposneType, FeatureSourceAttributeType, MapDictionaryType } from '@hessdalen-sensor-map/common-types';
 import type { MapBaseLayerKeyType } from '../Map';
 import { RootState } from './store';
-
-export interface GeoJSONFeature {
-  id: any;
-  type: "Feature";
-  geometry: {
-    type: string;
-    coordinates: number[] | number[][] | number[][][];
-  };
-  properties: Record<string, number|string|Date> ;
-}
-
-export interface UfoFeatureCollection {
-  type: "FeatureCollection";
-  clusterCount: number;
-  pointsCount: number;
-  features: GeoJSONFeature[] | null;
-}
-
-export interface FetchFeaturesResposneType {
-  results: UfoFeatureCollection;
-  dictionary?: MapDictionaryType;
-}
 
 // Extend QueryParams 
 export interface MapState {

@@ -17,10 +17,10 @@
     "jsx": "react",
     "paths": {
       "@hessdalen-sensor-map/config": [
-        "../config"
+        "../config/src/index.ts"
       ],
       "@hessdalen-sensor-map/common-types": [
-        "../common-types"
+        "../common-types/src/index.ts"
       ]
     },
   },

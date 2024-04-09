@@ -21,7 +21,7 @@ function getIdFromRow_id(id: number | string) {
 
 const FeatureTable: React.FC = () => {
     const dispatch = useDispatch();
-    const featureCollection = useSelector((state: RootState) => state.map.featureCollection);
+    const { featureCollection } = useSelector((state: RootState) => state.map);
     const { selectionId } = useSelector((state: RootState) => state.gui);
     const [localFeatures, setLocalFeatures] = useState<any[]>([]);
     const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -56,11 +56,6 @@ const FeatureTable: React.FC = () => {
             if (lastRowId) {
                 dispatch(setSelectionId(getIdFromRow_id(lastRowId)));
             }
-
-        } else if (event.key === 'Home') {
-            // Handle Home key
-        } else if (event.key === 'End') {
-            // Handle End key
         }
     }
 

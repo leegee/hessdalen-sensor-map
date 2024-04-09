@@ -3,7 +3,7 @@ import type { Context } from 'koa';
 import type { FeatureCollection } from 'geojson';
 import type { ParsedUrlQuery } from "querystring";
 
-import {  MapDictionary, QueryParams, QueryResponseType } from '@hessdalen-sensor-map/common-types/src';
+import {  MapDictionaryType, QueryParams, QueryResponseType } from '@hessdalen-sensor-map/common-types/src';
 import config from '@hessdalen-sensor-map/config/src';
 import { CustomError } from '../middleware/errors';
 import { listToCsvLine } from '../lib/csv';
@@ -26,7 +26,7 @@ export async function search(ctx: Context) {
     const body: QueryResponseType = {
         msg: '',
         status: 200,
-        dictionary: {} as MapDictionary,
+        dictionary: {} as MapDictionaryType,
         results: undefined,
     };
 
@@ -263,11 +263,11 @@ function csvForPoints(sqlBits: SqlBitsType) {
 }
 
 
-function getDictionary( userArgs: UserArgsType): MapDictionary {
+function getDictionary( userArgs: UserArgsType): MapDictionaryType {
     return  {
         datetime: {
             min: userArgs.timestamp_min,
             max: userArgs.timestamp_max,
         },
-    } as MapDictionary;
+    } as MapDictionaryType;
 }

@@ -48,13 +48,14 @@
     "vite-plugin-css-modules": "^0.0.1"
   },
   "dependencies": {
+    "@hessdalen-sensor-map/client": "^0.0.0",
+    "@hessdalen-sensor-map/common-types": "^0.0.0",
     "@koa/cors": "^5.0.0",
     "@reduxjs/toolkit": "^2.2.1",
     "@swc/cli": "^0.3.10",
     "@swc/core": "^1.4.6",
     "@types/koa-router": "^7.4.8",
-    "@hessdalen-sensor-map/client": "^0.0.0",
-    "@hessdalen-sensor-map/common-types": "^0.0.0",
+    "ag-grid-react": "^31.2.0",
     "concurrently": "^8.2.2",
     "debounce": "^2.0.0",
     "dotenv": "^16.4.5",

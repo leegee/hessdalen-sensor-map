@@ -1,7 +1,7 @@
 import GeoJSON from 'ol/format/GeoJSON.js';
 import Vector from 'ol/source/Vector.js';
 import WebGLPointsLayer from 'ol/layer/WebGLPoints.js';
-import type { UfoFeatureCollection } from 'redux/mapSlice';
+import type { UfoFeatureCollection } from  '@hessdalen-sensor-map/common-types';
 
 // const predefinedStyles = {
 //     circles: {

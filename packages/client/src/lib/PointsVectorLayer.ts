@@ -9,7 +9,7 @@ import { type Map, Overlay, type Feature } from "ol";
 import { sightingsStyleFunction } from "./map-style";
 import type { SimpleGeometry } from "ol/geom";
 
-import type { UfoFeatureCollectionType } from '@ufo-monorepo-test/common-types';
+import type { UfoFeatureCollection } from '@hessdalen-sensor-map/common-types';
 
 const vectorSource = new VectorSource({
     strategy: bbox,
@@ -27,7 +27,7 @@ vectorLayer.set('name', 'points');
 // Array to store references to the overlays
 const overlays: Overlay[] = [];
 
-export function updateVectorLayer(featureCollection: UfoFeatureCollectionType, map: Map) {
+export function updateVectorLayer(featureCollection: UfoFeatureCollection, map: Map) {
     vectorSource.clear();
     // Remove previous overlays
     overlays.forEach((overlay) => {

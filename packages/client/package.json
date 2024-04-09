@@ -13,11 +13,13 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
+    "@hessdalen-sensor-map/common-types": "file:../common-types",
+    "@hessdalen-sensor-map/config": "file:../config",
     "@reduxjs/toolkit": "^2.2.1",
     "@swc/cli": "^0.3.10",
     "@swc/core": "^1.4.6",
-    "@hessdalen-sensor-map/common-types": "file:../common-types",
-    "@hessdalen-sensor-map/config": "file:../config",
+    "ag-grid-community": "^31.2.0",
+    "ag-grid-react": "^31.2.0",
     "ol": "^9.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

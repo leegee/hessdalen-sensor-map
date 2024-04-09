@@ -97,6 +97,12 @@ const DateTime: React.FC = () => {
         if (e.key === 'Escape' || e.key === ' ') {
             toggleAnimation();
         }
+        else if (e.key === 'ArrowRight') {
+            setLocalTime(localTime + Number(config.gui.time_window_ms));
+        }
+        else if (e.key === 'ArrowLeft') {
+            setLocalTime(localTime - Number(config.gui.time_window_ms));
+        }
     }
 
     const toggleAnimation = () => dispatch(setIsAnimating(!isAnimating));
